@@ -1,17 +1,198 @@
-import { FileText } from 'lucide-react';
+
+'use client';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
+import { ArrowUp, ShoppingBag, BarChart, Users, DollarSign, Ban } from 'lucide-react';
+import { Line, LineChart, CartesianGrid, XAxis, Tooltip } from 'recharts';
+
+const chartData = [
+  { month: 'Jan', totalSales: 186, grossProfit: 80, netProfit: 60 },
+  { month: 'Feb', totalSales: 305, grossProfit: 200, netProfit: 150 },
+  { month: 'Mar', totalSales: 237, grossProfit: 120, netProfit: 90 },
+  { month: 'Apr', totalSales: 73, grossProfit: 190, netProfit: 120 },
+  { month: 'May', totalSales: 209, grossProfit: 130, netProfit: 100 },
+  { month: 'Jun', totalSales: 214, grossProfit: 140, netProfit: 110 },
+  { month: 'Jul', totalSales: 350, grossProfit: 220, netProfit: 180 },
+  { month: 'Aug', totalSales: 280, grossProfit: 180, netProfit: 140 },
+  { month: 'Sep', totalSales: 310, grossProfit: 190, netProfit: 150 },
+  { month: 'Oct', totalSales: 250, grossProfit: 160, netProfit: 120 },
+  { month: 'Nov', totalSales: 290, grossProfit: 180, netProfit: 140 },
+  { month: 'Dec', totalSales: 320, grossProfit: 200, netProfit: 160 },
+];
+
+const chartConfig = {
+  totalSales: {
+    label: 'Total Sales',
+    color: 'hsl(var(--chart-2))',
+  },
+  grossProfit: {
+    label: 'Gross Profit',
+    color: 'hsl(var(--chart-2))',
+  },
+  netProfit: {
+    label: 'Net Profit',
+    color: 'hsl(var(--chart-2))',
+  },
+};
 
 export default function Dashboard() {
   return (
-    <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
-      <div className="flex flex-col items-center gap-1 text-center">
-        <FileText className="h-10 w-10 text-muted-foreground" />
-        <h3 className="text-2xl font-bold tracking-tight">
-          Welcome to your Dashboard
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          You can start managing your store from here.
-        </p>
+    <>
+      <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">546</div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <span className="text-green-600 flex items-center"><ArrowUp className="h-3 w-3" /> 0.5%</span> 
+              vs last month
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Gross Profit</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">GHS 835k</div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <span className="text-green-600 flex items-center"><ArrowUp className="h-3 w-3" /> 0.5%</span> 
+              vs last month
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
+            <BarChart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">GHS 720.8M</div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <span className="text-green-600 flex items-center"><ArrowUp className="h-3 w-3" /> 0.5%</span> 
+              vs last month
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Expenses</CardTitle>
+            <Ban className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">GHS 20k</div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <span className="text-red-600 flex items-center"><ArrowUp className="h-3 w-3" /> 0.5%</span> 
+              vs last month
+            </p>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+
+      <div className="grid gap-4 md:gap-8 lg:grid-cols-1">
+        <Card>
+          <CardHeader>
+            <CardTitle>Total Sales</CardTitle>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <ChartContainer config={chartConfig} className="h-[300px] w-full">
+              <LineChart
+                data={chartData}
+                margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                <Tooltip
+                  cursor={false}
+                  content={
+                    <ChartTooltipContent
+                      indicator="line"
+                      labelKey="totalSales"
+                    />
+                  }
+                />
+                <Line
+                  dataKey="totalSales"
+                  type="monotone"
+                  stroke="hsl(var(--chart-2))"
+                  strokeWidth={2}
+                  dot={true}
+                />
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Gross Profit</CardTitle>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                <LineChart
+                    data={chartData}
+                    margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+                >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                    <Tooltip
+                        cursor={false}
+                        content={<ChartTooltipContent indicator="line" />}
+                    />
+                    <Line
+                        dataKey="grossProfit"
+                        type="monotone"
+                        stroke="hsl(var(--chart-2))"
+                        strokeWidth={2}
+                        dot={false}
+                    />
+                </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Net Profit</CardTitle>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                <LineChart
+                    data={chartData}
+                    margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+                >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                    <Tooltip
+                        cursor={false}
+                        content={<ChartTooltipContent indicator="line" />}
+                    />
+                    <Line
+                        dataKey="netProfit"
+                        type="monotone"
+                        stroke="hsl(var(--chart-2))"
+                        strokeWidth={2}
+                        dot={false}
+                    />
+                </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }
