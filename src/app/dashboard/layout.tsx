@@ -174,10 +174,10 @@ export default function DashboardLayout({
          <p className="px-3 pb-2 text-xs text-gray-500">PROFILE</p>
          <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
             <NavLink href="/dashboard/profile" icon={User}>My Profile</NavLink>
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-              <LogOut className="h-4 w-4 mr-3" />
+            <button onClick={handleLogout} className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 w-full text-left">
+              <LogOut className="h-4 w-4" />
               Logout
-            </DropdownMenuItem>
+            </button>
          </nav>
       </div>
     </div>
