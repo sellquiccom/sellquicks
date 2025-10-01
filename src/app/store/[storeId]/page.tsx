@@ -1,11 +1,14 @@
 
+'use client';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle, Clock, Plus } from 'lucide-react';
+import { ArrowRight, Clock, Plus } from 'lucide-react';
 import Link from 'next/link';
+import { getStoreIdentifier } from '@/lib/store';
+import { useEffect, useState } from 'react';
 
 type Product = {
   id: string;
@@ -66,27 +69,33 @@ const ProductCard = ({ product }: { product: Product }) => (
 );
 
 
-export default function StorefrontPage() {
+export default function StorePage({ params }: { params: { storeId: string } }) {
+  const [storeId, setStoreId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setStoreId(getStoreIdentifier(params.storeId));
+  }, [params.storeId]);
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Success Notification */}
-        <div className="bg-white p-4 rounded-lg shadow-lg flex items-center gap-4 mb-8 max-w-md">
-            <CheckCircle className="h-8 w-8 text-green-500" />
-            <div>
-                <h2 className="font-bold text-lg">This is a default storefront.</h2>
-                <p className="text-muted-foreground">Access a store at /store/[storeId]</p>
-            </div>
-        </div>
-
         <header className="relative bg-white p-6 rounded-lg shadow-sm mb-8">
             <div className="absolute -top-5 -right-5">
                 <div className="w-16 h-16 bg-pink-400 rounded-full flex items-center justify-center shadow-lg">
                     <Clock className="w-8 h-8 text-white" />
                 </div>
             </div>
-          <div className="flex items-center justify-center space-x-8">
+          <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold">Welcome to {storeId ? `'${storeId}'` : 'the store'}!</h1>
+                <p className="text-muted-foreground">The best place to find your favorite kicks.</p>
+              </div>
+          </div>
+        </header>
+
+        <main>
+          <div className="flex items-center justify-center space-x-8 mb-8">
             {categories.map((cat) => (
               <div key={cat.id} className="flex flex-col items-center gap-2">
                 <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-transparent hover:border-primary transition">
@@ -103,9 +112,7 @@ export default function StorefrontPage() {
               </div>
             ))}
           </div>
-        </header>
 
-        <main>
           <section className="mb-12">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-foreground">Featured Products</h2>
