@@ -1,3 +1,106 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "new-kicks",
+      "description": "New Kicks",
+      "imageUrl": "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8c2hvZXN8ZW58MHx8fHwxNzU5MjI4MzYyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "shoes"
+    },
+    {
+      "id": "nike",
+      "description": "Nike",
+      "imageUrl": "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzaG9lc3xlbnwwfHx8fDE3NTkyMjgzNjJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "shoes"
+    },
+    {
+      "id": "adidas",
+      "description": "Adidas",
+      "imageUrl": "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzaG9lc3xlbnwwfHx8fDE3NTkyMjgzNjJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "shoes"
+    },
+    {
+      "id": "clearance",
+      "description": "Clearance",
+      "imageUrl": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzaG9lc3xlbnwwfHx8fDE3NTkyMjgzNjJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "shoes"
+    },
+    {
+      "id": "vintage-picks",
+      "description": "Vintage Picks",
+      "imageUrl": "https://images.unsplash.com/photo-1491553895911-0055eca6402d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzaG9lc3xlbnwwfHx8fDE3NTkyMjgzNjJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "shoes"
+    },
+    {
+      "id": "product-1",
+      "description": "Green and White high-top sneakers",
+      "imageUrl": "https://images.unsplash.com/photo-1722489291846-0bc130eac071?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxncmVlbiUyMHNuZWFrZXJzfGVufDB8fHx8MTc1OTMyMDg4MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "green sneakers"
+    },
+    {
+      "id": "product-2",
+      "description": "Black and teal running shoes",
+      "imageUrl": "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxydW5uaW5nJTIwc2hvZXN8ZW58MHx8fHwxNzU5MjE1NTI5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "running shoes"
+    },
+    {
+      "id": "product-3",
+      "description": "Light-colored running shoes",
+      "imageUrl": "https://images.unsplash.com/photo-1722489291778-cb2a414d6ee0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHx3aGl0ZSUyMHNuZWFrZXJzfGVufDB8fHx8MTc1OTI1NDAyMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "white sneakers"
+    },
+    {
+      "id": "product-4",
+      "description": "Orange and white Nike Air Max",
+      "imageUrl": "https://images.unsplash.com/photo-1630497970381-8d7580087e7e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxvcmFuZ2UlMjBzbmVha2Vyc3xlbnwwfHx8fDE3NTkzMjA4ODJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "orange sneakers"
+    },
+    {
+      "id": "product-5",
+      "description": "Black and yellow Nike Dunk Low",
+      "imageUrl": "https://images.unsplash.com/photo-1542272605-15bd6a2bd4f4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx5ZWxsb3clMjBzbmVha2Vyc3xlbnwwfHx8fDE3NTkzMjA4ODF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "yellow sneakers"
+    },
+    {
+      "id": "product-6",
+      "description": "White Nike Airforce 1",
+      "imageUrl": "https://images.unsplash.com/photo-1587673680532-3f73c67c4abd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx3aGl0ZSUyMGFpcmZvcmNlfGVufDB8fHx8MTc1OTMyMDg4Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "white airforce"
+    },
+    {
+      "id": "product-7",
+      "description": "Blue and white Nike Dunk Low",
+      "imageUrl": "https://images.unsplash.com/photo-1580999991478-e7ca0d01a4ae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxibHVlJTIwc25lYWtlcnN8ZW58MHx8fHwxNzU5MjYyMzE1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "blue sneakers"
+    },
+    {
+      "id": "product-8",
+      "description": "Pastel-colored Nike Air Force 1 Low",
+      "imageUrl": "https://images.unsplash.com/photo-1581327110513-b8dc9d032a4a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjb2xvcmZ1bCUyMHNuZWFrZXJzfGVufDB8fHx8MTc1OTMyMDg4Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "colorful sneakers"
+    },
+    {
+      "id": "category-1",
+      "description": "Category 1",
+      "imageUrl": "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxmYXNoaW9ufGVufDB8fHx8MTc1OTMyMDg4MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fashion"
+    },
+    {
+      "id": "category-2",
+      "description": "Category 2",
+      "imageUrl": "https://images.unsplash.com/photo-1603732551658-5fabbafa84eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxlbGVjdHJvbmljc3xlbnwwfHx8fDE3NTkyNzc3NjJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "electronics"
+    },
+    {
+      "id": "category-3",
+      "description": "Category 3",
+      "imageUrl": "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxib29rc3xlbnwwfHx8fDE3NTkyNDc5NjZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "books"
+    },
+    {
+      "id": "category-4",
+      "description": "Category 4",
+      "imageUrl": "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxzcG9ydHN8ZW58MHx8fHwxNzU5MzIwODgxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sports"
+    }
+  ]
 }
