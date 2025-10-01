@@ -27,6 +27,10 @@ export default function SignupPage() {
       // along with the user's ID.
       // For now, we'll just redirect to the dashboard.
       console.log('New user signed up with business name:', businessName);
+      toast({
+        title: 'Signup Successful',
+        description: 'Your account has been created.',
+      });
       router.push('/dashboard');
     } catch (error: any) {
       toast({

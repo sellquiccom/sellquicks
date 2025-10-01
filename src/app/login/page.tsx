@@ -22,6 +22,10 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      toast({
+        title: 'Login Successful',
+        description: "Welcome back! You're now logged in.",
+      });
       router.push('/dashboard');
     } catch (error: any) {
       toast({
