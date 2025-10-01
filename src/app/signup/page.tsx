@@ -14,6 +14,7 @@ import { MountainIcon } from 'lucide-react';
 export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [businessName, setBusinessName] = useState('');
   const auth = getAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -22,6 +23,10 @@ export default function SignupPage() {
     e.preventDefault();
     try {
       await createUserWithEmailAndPassword(auth, email, password);
+      // Here you would typically save the businessName to your database (e.g., Firestore)
+      // along with the user's ID.
+      // For now, we'll just redirect to the dashboard.
+      console.log('New user signed up with business name:', businessName);
       router.push('/dashboard');
     } catch (error: any) {
       toast({
@@ -47,6 +52,17 @@ export default function SignupPage() {
             <p className="text-muted-foreground">Enter your information to create an account</p>
           </div>
           <form onSubmit={handleSignup} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="businessName">Business Name</Label>
+              <Input
+                id="businessName"
+                type="text"
+                placeholder="Your Awesome Store"
+                required
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

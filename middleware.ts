@@ -19,7 +19,7 @@ export default async function middleware(req: NextRequest) {
   const hostname = req.headers.get('host');
 
   // Define your production domain
-  const PROD_DOMAIN = 'your-domain.com'; // TODO: Replace with your actual domain
+  const PROD_DOMAIN = 'sellquic.com';
 
   // Extract storeId from subdomain
   let storeId;
