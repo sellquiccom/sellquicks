@@ -8,17 +8,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Sparkles, UploadCloud, X } from 'lucide-react';
+import { Sparkles, UploadCloud, X, Loader2 } from 'lucide-react';
 import { generateDescription } from '@/ai/flows/generate-description-flow';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function NewProductPage() {
   const [productName, setProductName] = useState('');
   const [productPrice, setProductPrice] = useState('');
+  const [productStock, setProductStock] = useState('');
   const [productDescription, setProductDescription] = useState('');
   const [productImages, setProductImages] = useState<File[]>([]);
+  
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
   const { toast } = useToast();
+  const { user } = useAuth();
+  const router = useRouter();
 
   const handleGenerateDescription = async () => {
     if (!productName) {
@@ -64,19 +74,47 @@ export default function NewProductPage() {
     setProductImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
 
-  const handleAddProduct = () => {
-    // This is where you would typically save the product and upload images.
-    console.log('New Product:', { 
-      name: productName, 
-      price: productPrice, 
-      description: productDescription,
-      images: productImages.map(f => f.name) 
-    });
-    toast({
-      title: 'Product Added (Mock)',
-      description: `The product "${productName}" has been added.`,
-    });
-    // Here you would likely redirect or clear the form.
+  const handleAddProduct = async () => {
+    if (!user) {
+      toast({ title: 'Authentication Error', description: 'You must be logged in to add a product.', variant: 'destructive'});
+      return;
+    }
+    if (!productName || !productPrice) {
+      toast({ title: 'Missing Information', description: 'Please fill out the product name and price.', variant: 'destructive'});
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // In a real app, you would upload images to a service like Firebase Storage
+      // and get the URLs. For now, we'll just store the file names as placeholders.
+      const imageUrls = productImages.map(file => file.name);
+
+      await addDoc(collection(db, 'products'), {
+        userId: user.uid,
+        name: productName,
+        price: parseFloat(productPrice),
+        stock: parseInt(productStock, 10) || 0,
+        description: productDescription,
+        images: imageUrls,
+        createdAt: new Date(),
+      });
+
+      toast({
+        title: 'Product Added!',
+        description: `The product "${productName}" has been successfully added to your store.`,
+      });
+      router.push('/dashboard/products');
+    } catch (error) {
+      console.error('Error adding product: ', error);
+      toast({
+        title: 'Save Failed',
+        description: 'There was an error saving your product. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -87,15 +125,40 @@ export default function NewProductPage() {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="product-name">Product Name</Label>
-            <Input 
-              id="product-name" 
-              placeholder="e.g., Classic Leather Sneakers" 
-              value={productName}
-              onChange={(e) => setProductName(e.target.value)}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="product-name">Product Name</Label>
+              <Input 
+                id="product-name" 
+                placeholder="e.g., Classic Leather Sneakers" 
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
+                disabled={isSaving}
+              />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="product-price">Price (GHS)</Label>
+              <Input 
+                id="product-price" 
+                placeholder="e.g., 250.00" 
+                type="number"
+                value={productPrice}
+                onChange={(e) => setProductPrice(e.target.value)}
+                disabled={isSaving}
+              />
+            </div>
           </div>
+           <div className="space-y-2">
+              <Label htmlFor="product-stock">Stock Quantity</Label>
+              <Input 
+                id="product-stock" 
+                placeholder="e.g., 50" 
+                type="number"
+                value={productStock}
+                onChange={(e) => setProductStock(e.target.value)}
+                disabled={isSaving}
+              />
+            </div>
 
           <div className="space-y-2">
             <Label>Product Images</Label>
@@ -111,6 +174,7 @@ export default function NewProductPage() {
                   <button 
                     onClick={() => removeImage(index)}
                     className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    disabled={isSaving}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -125,7 +189,7 @@ export default function NewProductPage() {
                     <UploadCloud className="h-8 w-8 mx-auto text-gray-400" />
                     <span className="text-sm text-muted-foreground">Upload Image</span>
                    </Label>
-                   <Input id="image-upload" type="file" className="sr-only" accept="image/*" multiple onChange={handleImageChange} />
+                   <Input id="image-upload" type="file" className="sr-only" accept="image/*" multiple onChange={handleImageChange} disabled={isSaving}/>
                 </div>
               )}
             </div>
@@ -133,32 +197,27 @@ export default function NewProductPage() {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="product-description">Product Description</Label>
+            <div className="flex justify-between items-center">
+              <Label htmlFor="product-description">Product Description</Label>
+              <Button variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isGenerating || isSaving}>
+                <Sparkles className="mr-2 h-4 w-4" />
+                {isGenerating ? 'Generating...' : 'Generate with AI'}
+              </Button>
+            </div>
             <Textarea
               id="product-description"
               placeholder="A few words about your product..."
               value={productDescription}
               onChange={(e) => setProductDescription(e.target.value)}
               className="min-h-[120px]"
-            />
-            <Button variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isGenerating}>
-              <Sparkles className="mr-2 h-4 w-4" />
-              {isGenerating ? 'Generating...' : 'Generate with AI'}
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="product-price">Price</Label>
-            <Input 
-              id="product-price" 
-              placeholder="e.g., 250.00" 
-              type="number"
-              value={productPrice}
-              onChange={(e) => setProductPrice(e.target.value)}
+              disabled={isSaving}
             />
           </div>
 
-          <Button onClick={handleAddProduct} size="lg">Add Product</Button>
+          <Button onClick={handleAddProduct} size="lg" disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving ? 'Saving Product...' : 'Add Product'}
+          </Button>
         </div>
       </CardContent>
     </Card>
