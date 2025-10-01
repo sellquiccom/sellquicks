@@ -19,7 +19,9 @@ import {
   User,
   Users,
 } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { getAuth, signOut } from 'firebase/auth';
+import React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -42,7 +44,8 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import React from 'react';
+import { useRequireAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 const NavLink = ({ href, children, icon: Icon, active, isSubmenu = false, ...props }: { href: string; children: React.ReactNode; icon: React.ElementType; active?: boolean; isSubmenu?: boolean }) => {
   const pathname = usePathname();
@@ -69,9 +72,37 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { user, loading } = useRequireAuth();
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
   const [isBookkeepingOpen, setIsBookkeepingOpen] = React.useState(pathname.startsWith('/dashboard/bookkeeping'));
   const [isAnalyticsOpen, setIsAnalyticsOpen] = React.useState(pathname.startsWith('/dashboard/analytics'));
+
+  const handleLogout = async () => {
+    try {
+      await signOut(getAuth());
+      router.push('/login');
+    } catch (error: any) {
+      toast({
+        title: 'Logout Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <div>Loading...</div>
+        </div>
+    );
+  }
+
+  if (!user) {
+    return null; // or a loading spinner, since useRequireAuth will redirect
+  }
 
   const sidebarNav = (
     <div className="flex h-full max-h-screen flex-col">
@@ -92,7 +123,7 @@ export default function DashboardLayout({
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuItem>Support</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -143,7 +174,10 @@ export default function DashboardLayout({
          <p className="px-3 pb-2 text-xs text-gray-500">PROFILE</p>
          <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
             <NavLink href="/dashboard/profile" icon={User}>My Profile</NavLink>
-            <NavLink href="/logout" icon={LogOut}>Logout</NavLink>
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+              <LogOut className="h-4 w-4 mr-3" />
+              Logout
+            </DropdownMenuItem>
          </nav>
       </div>
     </div>
