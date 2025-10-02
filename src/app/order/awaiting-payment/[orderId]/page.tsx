@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Loader2, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
 
 interface OrderData extends DocumentData {
     id: string;
@@ -169,5 +170,3 @@ export default function AwaitingPaymentPage() {
         </div>
     );
 }
-
-    
