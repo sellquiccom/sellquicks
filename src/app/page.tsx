@@ -1,15 +1,26 @@
-
 import { Button } from "@/components/ui/button";
-import { MountainIcon } from "lucide-react";
+import { MountainIcon, ArrowRight, Monitor, Smartphone, RefreshCw, Blend, ToyBrick, Bot, Sparkles } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+
+const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType, title: string, description: string }) => (
+  <div className="flex flex-col items-start gap-2">
+    <div className="flex items-center gap-3">
+      <Icon className="h-5 w-5 text-primary" />
+      <h3 className="text-xl font-semibold text-accent-foreground">{title}</h3>
+    </div>
+    <p className="text-muted-foreground">{description}</p>
+  </div>
+);
+
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white">
-      <header className="px-4 lg:px-6 h-16 flex items-center fixed top-0 left-0 right-0 z-20 bg-black/50 backdrop-blur-sm">
+    <div className="flex flex-col min-h-screen">
+      <header className="px-4 lg:px-6 h-16 flex items-center fixed top-0 left-0 right-0 z-20 bg-black/50 backdrop-blur-sm text-white">
         <Link className="flex items-center justify-center" href="#">
           <MountainIcon className="h-6 w-6" />
-          <span className="sr-only">SellQuic</span>
+          <span className="ml-2 text-lg font-semibold">SellQuic</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
           <Link
@@ -26,12 +37,6 @@ export default function Home() {
           </Link>
           <Link
             className="text-sm font-medium hover:underline underline-offset-4"
-            href="#"
-          >
-            About
-          </Link>
-          <Link
-            className="text-sm font-medium hover:underline underline-offset-4"
             href="/login"
           >
             Login
@@ -39,7 +44,7 @@ export default function Home() {
         </nav>
       </header>
       <main className="flex-1">
-        <section className="relative w-full h-screen flex items-center justify-center">
+        <section className="relative w-full h-screen flex items-center justify-center bg-black text-white">
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
             <video
               autoPlay
@@ -48,7 +53,7 @@ export default function Home() {
               playsInline
               className="w-full h-full object-cover"
             >
-              <source src="https://videos.pexels.com/video-files/3209828/3209828-hd.mp4" type="video/mp4" />
+              <source src="https://firebasestorage.googleapis.com/v0/b/sellquic.firebasestorage.app/o/WhatsApp%20Video%202025-09-29%20at%2013.05.33_6eb32e77.mp4?alt=media&token=ed31a266-1a60-47d6-9fcf-d1be7f9d035d" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
             <div className="absolute top-0 left-0 w-full h-full bg-black/60"></div>
@@ -75,8 +80,114 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-accent">
+          <div className="container px-4 md:px-6">
+            <div className="grid gap-12 lg:grid-cols-2 lg:gap-24">
+              <div className="flex flex-col justify-center space-y-8">
+                <div className="space-y-4">
+                  <h2 className="text-4xl font-bold tracking-tighter sm:text-5xl text-accent-foreground">Customize to make it your own</h2>
+                  <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                    Our intuitive platform gives you complete control over your store's design and functionality.
+                  </p>
+                </div>
+                <ul className="grid gap-6">
+                  <li>
+                    <div className="grid gap-1">
+                      <div className="flex items-center gap-2">
+                        <ArrowRight className="h-5 w-5 text-primary" />
+                        <h3 className="text-xl font-bold text-accent-foreground">Intuitive drag and drop</h3>
+                      </div>
+                      <p className="text-muted-foreground">
+                        Effortlessly add and arrange your text, visuals, buttons and even entire sections.
+                      </p>
+                    </div>
+                  </li>
+                  <li>
+                    <div className="grid gap-1">
+                       <h3 className="text-xl font-bold text-accent-foreground ml-7">Built-in AI tools</h3>
+                    </div>
+                  </li>
+                  <li>
+                    <div className="grid gap-1">
+                       <h3 className="text-xl font-bold text-accent-foreground ml-7">Advanced design features</h3>
+                    </div>
+                  </li>
+                </ul>
+                <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                  <Button size="lg" asChild>
+                    <Link href="/signup">Get Started</Link>
+                  </Button>
+                </div>
+              </div>
+              <div className="relative rounded-xl shadow-2xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-100 to-orange-100 z-0"></div>
+                 <Image
+                    src="https://picsum.photos/seed/towel/700/600"
+                    alt="Editor Mockup Background"
+                    width={700}
+                    height={600}
+                    className="absolute top-0 right-0 w-2/3 h-full object-cover z-10"
+                    data-ai-hint="colorful towel"
+                  />
+                <div className="relative z-20 m-4 lg:m-6 bg-white/50 backdrop-blur-sm rounded-lg border border-gray-200/50">
+                    <div className="flex items-center justify-between p-2 border-b border-gray-200/50">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-gray-600">Page: Home</span>
+                            <ChevronDownIcon className="h-4 w-4 text-gray-500"/>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Monitor className="h-5 w-5 text-gray-600" />
+                            <Smartphone className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <div className="flex items-center gap-3">
+                           <RefreshCw className="h-4 w-4 text-gray-500" />
+                           <Blend className="h-4 w-4 text-gray-500" />
+                           <ToyBrick className="h-4 w-4 text-gray-500" />
+                           <Button size="sm" variant="ghost" className="text-xs h-7">Tools</Button>
+                           <Button size="sm" className="text-xs h-7">Publish</Button>
+                        </div>
+                    </div>
+                    <div className="bg-yellow-50 p-6 md:p-8 lg:p-12">
+                      <div className="max-w-md mx-auto text-center">
+                        <h3 className="text-4xl font-bold text-orange-500" style={{fontFamily: "'Fredoka One', cursive"}}>PROSUN 
+                          <span className="text-2xl align-super">50+</span>
+                        </h3>
+                        <p className="text-sm font-semibold text-orange-400 tracking-wider mb-6">PROTECT. NOURISH. SHINE.</p>
+                        <div className="relative aspect-video rounded-lg overflow-hidden mb-6 shadow-lg">
+                           <Image
+                            src="https://picsum.photos/seed/sunscreen-girl/300/200"
+                            alt="Woman with sunscreen"
+                            fill
+                            className="object-cover"
+                            data-ai-hint="woman beach"
+                          />
+                        </div>
+                        <div className="relative -mt-16 mr-10 self-end w-24 h-32 animate-pulse">
+                           <Image
+                            src="https://picsum.photos/seed/sunscreen-tube/200/300"
+                            alt="Sunscreen tube"
+                            fill
+                            className="object-contain drop-shadow-2xl"
+                            data-ai-hint="sunscreen bottle"
+                          />
+                        </div>
+                        <p className="text-sm text-gray-600 mt-4">
+                          Maximum protection for every adventure. Lightweight and non-greasy, perfect for all skin types.
+                        </p>
+                         <Button variant="outline" className="mt-6 bg-transparent border-orange-400 text-orange-500 hover:bg-orange-500 hover:text-white">
+                           Shop Now
+                         </Button>
+                      </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </main>
-      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-gray-800 z-10">
+      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-gray-800 z-10 bg-black text-white">
         <p className="text-xs text-gray-400">
           © 2024 SellQuic. All rights reserved.
         </p>
@@ -91,4 +202,23 @@ export default function Home() {
       </footer>
     </div>
   );
+}
+
+function ChevronDownIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  )
 }
