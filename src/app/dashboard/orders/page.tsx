@@ -148,8 +148,8 @@ const OrderRow = ({ order }: { order: Order }) => {
   };
 
   return (
-    <Collapsible asChild open={isOpen} onOpenChange={setIsOpen}>
-      <>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} asChild>
+      <tbody className="border-b">
         <CollapsibleTrigger asChild>
           <TableRow className="cursor-pointer">
             <TableCell className="font-medium">
@@ -305,7 +305,7 @@ const OrderRow = ({ order }: { order: Order }) => {
             </TableCell>
           </tr>
         </CollapsibleContent>
-      </>
+      </tbody>
     </Collapsible>
   );
 };
