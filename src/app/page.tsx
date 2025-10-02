@@ -353,47 +353,47 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="w-full md:h-screen flex items-center text-white py-12 md:py-0" style={{ backgroundColor: '#5921c8' }}>
+        <section className="w-full md:h-screen flex items-center bg-white text-black py-12 md:py-0">
           <div className="container px-4 md:px-6">
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl shadow-inner-lg overflow-hidden">
-              <div className="flex justify-between items-center p-4 border-b border-gray-800">
+            <div className="bg-gray-100 border border-gray-200 rounded-2xl shadow-lg overflow-hidden">
+              <div className="flex justify-between items-center p-4 border-b border-gray-200">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-red-500"></div>
                   <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-600">
                   <Search className="inline-block mr-2 h-4 w-4" />
                   Search
                 </div>
                 <div>
-                  <Bell className="h-5 w-5 text-gray-400"/>
+                  <Bell className="h-5 w-5 text-gray-500"/>
                 </div>
               </div>
               <div className="flex">
-                <div className="w-48 p-4 border-r border-gray-800 space-y-2">
-                  <Button variant="ghost" className="w-full justify-start text-white bg-gray-700"><HomeIcon className="mr-2 h-4 w-4" /> Home</Button>
-                  <Button variant="ghost" className="w-full justify-start text-gray-400"><ShoppingCart className="mr-2 h-4 w-4" /> Orders</Button>
-                  <Button variant="ghost" className="w-full justify-start text-gray-400"><Package className="mr-2 h-4 w-4" /> Products</Button>
-                  <Button variant="ghost" className="w-full justify-start text-gray-400"><Users className="mr-2 h-4 w-4" /> Customers</Button>
-                  <Button variant="ghost" className="w-full justify-start text-gray-400"><BarChart2 className="mr-2 h-4 w-4" /> Analytics</Button>
+                <div className="w-48 p-4 border-r border-gray-200 space-y-2">
+                  <Button variant="ghost" className="w-full justify-start text-black bg-gray-200"><HomeIcon className="mr-2 h-4 w-4" /> Home</Button>
+                  <Button variant="ghost" className="w-full justify-start text-gray-500"><ShoppingCart className="mr-2 h-4 w-4" /> Orders</Button>
+                  <Button variant="ghost" className="w-full justify-start text-gray-500"><Package className="mr-2 h-4 w-4" /> Products</Button>
+                  <Button variant="ghost" className="w-full justify-start text-gray-500"><Users className="mr-2 h-4 w-4" /> Customers</Button>
+                  <Button variant="ghost" className="w-full justify-start text-gray-500"><BarChart2 className="mr-2 h-4 w-4" /> Analytics</Button>
                 </div>
-                <div className="flex-1 p-6">
+                <div className="flex-1 p-6 bg-white">
                   <div className="grid grid-cols-3 gap-4 mb-6">
-                    <div className="bg-gray-800 p-4 rounded-lg">
-                      <p className="text-sm text-gray-400">Online store sessions</p>
-                      <p className="text-2xl font-bold">1,853 <span className="text-sm font-normal text-green-400 flex items-center gap-1"><ArrowUp className="h-3 w-3"/>+1%</span></p>
+                    <div className="bg-gray-50 p-4 rounded-lg border">
+                      <p className="text-sm text-gray-500">Online store sessions</p>
+                      <p className="text-2xl font-bold">1,853 <span className="text-sm font-normal text-green-500 flex items-center gap-1"><ArrowUp className="h-3 w-3"/>+1%</span></p>
                     </div>
-                     <div className="bg-gray-800 p-4 rounded-lg">
-                      <p className="text-sm text-gray-400">Total sales</p>
-                      <p className="text-2xl font-bold">$2,521.50 <span className="text-sm font-normal text-red-400 flex items-center gap-1"><ArrowDown className="h-3 w-3"/>-2%</span></p>
+                     <div className="bg-gray-50 p-4 rounded-lg border">
+                      <p className="text-sm text-gray-500">Total sales</p>
+                      <p className="text-2xl font-bold">$2,521.50 <span className="text-sm font-normal text-red-500 flex items-center gap-1"><ArrowDown className="h-3 w-3"/>-2%</span></p>
                     </div>
-                     <div className="bg-gray-800 p-4 rounded-lg">
-                      <p className="text-sm text-gray-400">Total orders</p>
-                      <p className="text-2xl font-bold">56 <span className="text-sm font-normal text-green-400 flex items-center gap-1"><ArrowUp className="h-3 w-3"/>+10%</span></p>
+                     <div className="bg-gray-50 p-4 rounded-lg border">
+                      <p className="text-sm text-gray-500">Total orders</p>
+                      <p className="text-2xl font-bold">56 <span className="text-sm font-normal text-green-500 flex items-center gap-1"><ArrowUp className="h-3 w-3"/>+10%</span></p>
                     </div>
                   </div>
-                  <div className="w-full h-40 bg-gray-800 rounded-lg relative">
+                  <div className="w-full h-40 bg-gray-50 rounded-lg relative border">
                     <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
                       <path d="M 0 50 C 50 20, 100 80, 150 50 S 250 20, 300 50" stroke="#38bdf8" fill="none" strokeWidth="2" />
                     </svg>
@@ -447,3 +447,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
