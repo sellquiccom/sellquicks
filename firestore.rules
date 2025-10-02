@@ -1,99 +1,103 @@
 /**
- * @description This ruleset enforces a strict user-ownership model for seller profiles and a store-ownership model for products and orders.
- * All write operations are restricted to authenticated users. Data structure:
- * - /users/{userId}: Stores seller profiles, with the document ID matching the user's UID.
- * - /products/{productId}: Stores product data.
- * - /orders/{orderId}: Stores order data.
+ * @fileoverview Firestore Security Rules for Prototyping.
  *
- * @keySecurityDecisions
- * - Users can only read and write their own profile data.
- * - Products and orders are accessible with authentication.
+ * Core Philosophy:
+ * This ruleset prioritizes rapid development by focusing on strict authentication and authorization.
+ * Schema validation is relaxed to allow for flexible data modeling during the prototyping phase.
  *
- * @denormalizationForAuthorization
- * - For the /products/{productId} collection, it is essential that each product document contains a `storeId` field
- *   that links it to the store that owns it. This enables the rules to quickly verify that the seller creating, updating, or
- *   deleting a product is indeed the owner of the associated store. The `storeId` field MUST match a Store document's `id` field.
- * - Similarly, for the /orders/{orderId} collection, each order document must contain a `storeId` field that links it
- *   to the store that is responsible for the order. This allows the rules to authorize access to orders based on store ownership.
+ * Data Structure:
+ * - `/users/{userId}`: Stores seller profile information. The `userId` path parameter must match the authenticated user's UID.
+ * - `/products/{productId}`: Stores all products for all stores.
+ * - `/orders/{orderId}`: Stores all orders for all stores.
+ * - `/users/{userId}/categories/{categoryId}`: Stores product categories created by a specific user.
+ *
+ * Key Security Decisions:
+ * - User listing is generally disallowed to prevent information disclosure.
+ * - All write operations are protected by authentication checks.
+ * - Ownership is enforced for user-specific data.
+ *
+ * Denormalization for Authorization:
+ *  - For `products` and `orders`, a `sellerId` or similar field would enable more granular authorization.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Protects user profiles, ensuring users can only access their own data.
+     * @description Allows a seller to manage their own profile.
      * @path /users/{userId}
-     * @allow (create) User with UID 'user_abc' can create a profile at /users/user_abc.
-     * @deny (create) User with UID 'user_xyz' cannot create a profile at /users/user_abc.
-     * @allow (get) User with UID 'user_abc' can read their profile at /users/user_abc.
-     * @deny (get) User with UID 'user_xyz' cannot read the profile at /users/user_abc.
-     * @allow (update) User with UID 'user_abc' can update their profile at /users/user_abc.
-     * @deny (update) User with UID 'user_xyz' cannot update the profile at /users/user_abc.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - User with UID 'user_abc' can create their profile at /users/user_abc.
+     * @allow (update) - User with UID 'user_abc' can update their profile at /users/user_abc.
+     * @allow (delete) - User with UID 'user_abc' can delete their profile at /users/user_abc.
+     * @deny  (create) - User with UID 'user_xyz' cannot create a profile at /users/user_abc.
+     * @deny  (update) - User with UID 'user_xyz' cannot update the profile at /users/user_abc.
+     * @deny  (delete) - User with UID 'user_xyz' cannot delete the profile at /users/user_abc.
+     * @deny (list) Listing all users is not permitted
+     * @principle Enforces user-ownership for profile management.
      */
     match /users/{userId} {
-      // Check if the user is signed in.
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isSignedIn() {
+        return request.auth != null;
+      }
       allow get: if isSignedIn() && isOwner(userId);
       allow list: if false;
-      // Only allow creation if the user is signed in and the userId matches the authenticated user's ID.
       allow create: if isSignedIn() && isOwner(userId);
-      // Only allow update if the user is signed in and the userId matches the authenticated user's ID.
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      // Only allow deletion if the user is signed in and the userId matches the authenticated user's ID.
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId) && resource != null;
+      allow delete: if isSignedIn() && isOwner(userId) && resource != null;
     }
 
-    /**
-     * @description Manages products, ensuring only authenticated users can access product information.
-     * @path /products/{productId}
-     * @allow (get) Any authenticated user can read a product.
-     * @deny (create) An unauthenticated user cannot create a product.
-     * @allow (create) An authenticated user can create a product.
-     * @deny (update) An unauthenticated user cannot update a product.
-     * @allow (update) An authenticated user can update a product they own.
-     * @deny (delete) An unauthenticated user cannot delete a product.
-     * @allow (delete) An authenticated user can delete a product they own.
-     * @principle Authenticated access with ownership checks.
-     */
-    match /products/{productId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
-    }
+      /**
+       * @description Allows any user to read products, but restricts creation, updating, and deletion.
+       * @path /products/{productId}
+       * @allow (get, list) - Any authenticated user can read any product.
+       * @deny (create, update, delete) - No one can create, update, or delete products.
+       * @principle  Public read, no writes allowed
+       */
+      match /products/{productId} {
+        allow get: if true;
+        allow list: if true;
+        allow create, update, delete: if false;
+      }
 
     /**
-     * @description Manages orders, ensuring only authenticated users can access order information.
+     * @description Allows any user to read orders, but restricts creation, updating, and deletion.
      * @path /orders/{orderId}
-     * @allow (get) Any authenticated user can read an order.
-     * @deny (create) An unauthenticated user cannot create an order.
-     * @allow (create) An authenticated user can create an order.
-     * @deny (update) An unauthenticated user cannot update an order.
-     * @allow (update) An authenticated user can update an order they own.
-     * @deny (delete) An unauthenticated user cannot delete an order.
-     * @allow (delete) An authenticated user can delete an order they own.
-     * @principle Authenticated access with ownership checks.
+     * @allow (get, list) - Any authenticated user can read any order.
+     * @deny (create, update, delete) - No one can create, update, or delete orders.
+     * @principle  Public read, no writes allowed
      */
     match /orders/{orderId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow get: if true;
+      allow list: if true;
+      allow create, update, delete: if false;
     }
-  }
 
-  // Helper function to determine if the user is signed in.
-  function isSignedIn() {
-    return request.auth != null;
-  }
-
-  // Helper function to determine if the user is the owner of the resource.
-  function isOwner(userId) {
-    return request.auth.uid == userId;
-  }
-
-  // Helper function to determine if the user is the existing owner of the resource.
-  function isExistingOwner(userId) {
-    return isOwner(userId) && resource != null;
+    /**
+     * @description Allows a seller to manage their own product categories.
+     * @path /users/{userId}/categories/{categoryId}
+     * @allow (create) - User with UID 'user_abc' can create a category under /users/user_abc/categories/{categoryId}.
+     * @allow (update) - User with UID 'user_abc' can update a category under /users/user_abc/categories/{categoryId}.
+     * @allow (delete) - User with UID 'user_abc' can delete a category under /users/user_abc/categories/{categoryId}.
+     * @deny  (create) - User with UID 'user_xyz' cannot create a category under /users/user_abc/categories/{categoryId}.
+     * @deny  (update) - User with UID 'user_xyz' cannot update a category under /users/user_abc/categories/{categoryId}.
+     * @deny  (delete) - User with UID 'user_xyz' cannot delete a category under /users/user_abc/categories/{categoryId}.
+     * @principle Enforces user-ownership for category management.
+     */
+    match /users/{userId}/categories/{categoryId} {
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId) && resource != null;
+      allow delete: if isSignedIn() && isOwner(userId) && resource != null;
+    }
   }
 }
