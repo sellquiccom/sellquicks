@@ -17,7 +17,6 @@ import { db } from '@/lib/firebase';
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, totalItems, totalPrice } = useCart();
   const [primaryColor, setPrimaryColor] = useState<string | undefined>();
-  const shippingCost = 10.00;
 
   useEffect(() => {
     const fetchStoreColor = async () => {
@@ -133,12 +132,12 @@ export default function CartPage() {
                       </div>
                        <div className="flex justify-between">
                           <span className="text-muted-foreground">Shipping</span>
-                          <span className="font-medium">GHS {shippingCost.toFixed(2)}</span>
+                          <span className="font-medium text-muted-foreground italic">Calculated at checkout</span>
                       </div>
                       <Separator />
                        <div className="flex justify-between font-semibold text-base">
                           <span>Order Total</span>
-                          <span>GHS {(totalPrice + shippingCost).toFixed(2)}</span>
+                          <span>GHS {totalPrice.toFixed(2)}</span>
                       </div>
                   </CardContent>
                   <CardFooter>
@@ -154,3 +153,5 @@ export default function CartPage() {
     </div>
   );
 }
+
+    

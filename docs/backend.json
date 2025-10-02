@@ -127,7 +127,15 @@
         },
         "totalAmount": {
           "type": "number",
-          "description": "The total amount of the order."
+          "description": "The total amount of the order, including shipping."
+        },
+        "shipping": {
+            "type": "object",
+            "properties": {
+                "label": { "type": "string" },
+                "fee": { "type": "number" }
+            },
+            "description": "The selected shipping method and cost."
         },
         "paymentProofUrl": {
           "type": "string",
@@ -378,6 +386,31 @@
         "name",
         "userId"
       ]
+    },
+    "Delivery": {
+       "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Delivery",
+      "type": "object",
+      "description": "Represents a delivery/shipping option created by a seller.",
+       "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the delivery option."
+        },
+        "userId": {
+            "type": "string",
+            "description": "The UID of the seller who created this option."
+        },
+        "label": {
+            "type": "string",
+            "description": "The name or label for the delivery option (e.g., 'Within Accra')."
+        },
+        "fee": {
+            "type": "number",
+            "description": "The shipping fee for this option."
+        }
+       },
+       "required": ["id", "userId", "label", "fee"]
     }
   },
   "auth": {
@@ -409,6 +442,12 @@
         "$ref": "#/entities/Category"
       },
       "description": "Stores product categories created by a specific user."
+    },
+    "/users/{userId}/deliveries/{deliveryId}": {
+        "schema": {
+            "$ref": "#/entities/Delivery"
+        },
+        "description": "Stores delivery options created by a specific user."
     }
   }
 }
