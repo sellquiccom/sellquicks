@@ -83,9 +83,9 @@ const InternationalSection = () => {
                     </p>
                 </div>
                 <div 
-                    className="relative min-h-[480px] bg-grid-glow rounded-2xl border border-white/10 p-8 flex items-center justify-center"
+                    className="relative flex flex-col min-h-[580px] md:min-h-[480px] bg-grid-glow rounded-2xl border border-white/10 p-8 md:flex-row md:items-center md:justify-center"
                 >
-                    <div className="absolute left-8 top-1/2 -translate-y-1/2 flex flex-col gap-3">
+                    <div className="w-full flex-wrap justify-center items-center gap-3 mb-8 flex md:absolute md:left-8 md:top-1/2 md:-translate-y-1/2 md:flex-col md:w-auto md:mb-0">
                         {countries.map(country => (
                             <button key={country.code} onClick={() => setActiveCountry(country)} className="group">
                                 <CountryFlag 
@@ -96,7 +96,7 @@ const InternationalSection = () => {
                         ))}
                     </div>
 
-                    <div className="relative w-[500px] h-[300px]">
+                    <div className="relative w-full h-[300px] flex-1 md:w-[500px]">
                         {countries.map((country, index) => (
                             <div
                                 key={country.code}
