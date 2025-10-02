@@ -1,222 +1,70 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a strict user-ownership model for seller-related data and public read access for subscription plans.
+ * @fileOverview Firestore Security Rules for the application.
+ *
+ * Core Philosophy:
+ * This ruleset prioritizes rapid prototyping by granting broad access.
+ * This is NOT a production-ready ruleset. It should be refined iteratively
+ * as the application evolves.
  *
  * Data Structure:
- * - /users/{userId}: Seller profiles, where userId matches the Firebase Auth UID.
- * - /users/{userId}/stores/{storeId}: Stores owned by a seller. sellerId is denormalized for efficient authorization.
- * - /stores/{storeId}/products/{productId}: Products belonging to a store. storeId is denormalized.
- * - /stores/{storeId}/orders/{orderId}: Orders placed in a store.
- * - /stores/{storeId}/orders/{orderId}/order_items/{orderItemId}: Items within an order.
- * - /subscription_plans/{subscriptionPlanId}: Publicly accessible subscription plans.
- * - /users/{userId}/seller_subscriptions/{sellerSubscriptionId}: Seller's subscription data.
- * - /customers/{customerId}: Customer profiles. customerId is distinct from userId.
+ * - /users/{userId}: Stores seller profile information, with `userId` matching the authenticated user's UID.
+ * - /products/{productId}: Stores all products for all stores.
+ * - /orders/{orderId}: Stores all orders for all stores.
  *
  * Key Security Decisions:
- * - Sellers can only manage their own stores, products, and seller subscriptions.
- * - Customers are stored separately, distinct from Sellers.
- * - Subscription plans are publicly readable but not writable through the rules. They are assumed to be managed via a separate, trusted backend.
- * - Listing of collections is generally allowed for owners of user-scoped subcollections.
+ * - All read and write operations are currently allowed. This is intended for
+ *   development purposes only and should be tightened as the application matures.
  *
  * Denormalization for Authorization:
- * - `stores` nest under `/users/{userId}` but also denormalize `sellerId` for direct authorization checks.
- * - `products` nest under `/stores/{storeId}` and denormalize `storeId` for direct authorization checks.
- * - `orders` nest under `/stores/{storeId}`, and contain `customerId` and `storeId` for direct authorization checks.
- * - `order_items` nest under `/stores/{storeId}/orders/{orderId}`, inheriting `storeId` from the order.
+ * - No denormalization is currently implemented due to the broad access policy.
+ *
+ * Structural Segregation:
+ * - No structural segregation is implemented due to the broad access policy.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows sellers to manage their own profile data.
+     * @description Allows all operations on user documents.
      * @path /users/{userId}
-     * @allow (create) - User with UID 'user_abc' can create their profile at /users/user_abc if request.auth.uid == 'user_abc'
-     * @allow (get, update, delete) - User with UID 'user_abc' can get, update, and delete their profile at /users/user_abc.
-     * @deny (create, update, delete) - User with UID 'user_xyz' cannot create/modify/delete the profile at /users/user_abc.
-     * @principle Enforces document ownership based on Firebase Auth UID.
+     * @allow (create) - Any authenticated user can create a user document.
+     * @allow (get) - Any user can read a user document.
+     * @allow (update) - Any user can update a user document.
+     * @allow (delete) - Any user can delete a user document.
+     * @principle Allows all operations for rapid prototyping.
      */
     match /users/{userId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource.data != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == userId;
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Allows a seller to manage their stores.
-     * @path /users/{userId}/stores/{storeId}
-     * @allow (create) - User with UID 'user_abc' can create a store under /users/user_abc/stores/store1 if request.resource.data.sellerId == 'user_abc'.
-     * @allow (get, update, delete) - User with UID 'user_abc' can get, update, and delete the store under /users/user_abc/stores/store1 if resource.data.sellerId == 'user_abc'.
-     * @deny (create, update, delete) - User with UID 'user_xyz' cannot create/modify/delete the store under /users/user_abc/stores/store1.
-     * @principle Enforces document ownership based on Firebase Auth UID and denormalized sellerId.
-     */
-    match /users/{userId}/stores/{storeId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource.data != null;
-      }
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.sellerId == userId;
-      allow update: if isExistingOwner(userId) && resource.data.sellerId == userId;
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Allows management of products within a store.
-     * @path /stores/{storeId}/products/{productId}
-     * @allow (get, list) - Allows anyone to read products.
-     * @allow (create) - Only the store owner can create a product in their store. The storeId in the product must match the path.
-     * @allow (update, delete) - Only the store owner can update or delete a product in their store.
-     * @deny (create) - A user cannot create a product with a mismatched storeId.
-     * @principle Public read access with owner-only writes, enforcing relational integrity.
-     */
-    match /stores/{storeId}/products/{productId} {
-        function isSignedIn() {
-          return request.auth != null;
-        }
-        function isStoreOwner(storeId) {
-            return get(/databases/$(database)/documents/stores/$(storeId)).data.sellerId == request.auth.uid;
-        }
-        function isExistingStoreOwner(storeId) {
-          return isStoreOwner(storeId) && resource.data != null;
-        }
-        allow get, list: if true;
-        allow create: if isSignedIn() && isStoreOwner(storeId) && request.resource.data.storeId == storeId;
-        allow update: if isSignedIn() && isStoreOwner(storeId) && request.resource.data.storeId == storeId;
-        allow delete: if isSignedIn() && isStoreOwner(storeId) && request.resource.data.storeId == storeId;
-    }
-
-    /**
-     * @description Allows management of orders within a store.
-     * @path /stores/{storeId}/orders/{orderId}
-     * @allow (get, list) - Allows anyone to read orders.
-     * @allow (create) - Only a customer can create an order. The storeId and customerId in the order must match the path.
-     * @allow (update, delete) - Only the store owner can update or delete an order in their store.
-     * @deny (create) - A user cannot create an order with a mismatched storeId or customerId.
-     * @principle Public read access with owner-only writes, enforcing relational integrity.
-     */
-    match /stores/{storeId}/orders/{orderId} {
-        function isSignedIn() {
-          return request.auth != null;
-        }
-        function isStoreOwner(storeId) {
-            return get(/databases/$(database)/documents/stores/$(storeId)).data.sellerId == request.auth.uid;
-        }
-        function isExistingStoreOwner(storeId) {
-          return isStoreOwner(storeId) && resource.data != null;
-        }
-        allow get, list: if true;
-        allow create: if isSignedIn() && request.resource.data.storeId == storeId; // TODO: Add customerId validation once customer auth is implemented
-        allow update: if isSignedIn() && isStoreOwner(storeId);
-        allow delete: if isSignedIn() && isStoreOwner(storeId);
-    }
-
-    /**
-     * @description Allows management of order items within an order.
-     * @path /stores/{storeId}/orders/{orderId}/order_items/{orderItemId}
-     * @allow (get, list) - Allows anyone to read order items.
-     * @allow (create) - Only the store owner can create an order item in their store. The storeId in the order item must match the path.
-     * @allow (update, delete) - Only the store owner can update or delete an order item in their store.
-     * @deny (create) - A user cannot create an order item with a mismatched storeId.
-     * @principle Public read access with owner-only writes, enforcing relational integrity.
-     */
-    match /stores/{storeId}/orders/{orderId}/order_items/{orderItemId} {
-        function isSignedIn() {
-          return request.auth != null;
-        }
-        function isStoreOwner(storeId) {
-            return get(/databases/$(database)/documents/stores/$(storeId)).data.sellerId == request.auth.uid;
-        }
-        function isExistingStoreOwner(storeId) {
-          return isStoreOwner(storeId) && resource.data != null;
-        }
-        allow get, list: if true;
-        allow create: if isSignedIn() && isStoreOwner(storeId) && get(/databases/$(database)/documents/stores/$(storeId)/orders/$(orderId)).data.storeId == storeId; // Assuming the user is the store owner creating the item
-        allow update: if isSignedIn() && isStoreOwner(storeId);
-        allow delete: if isSignedIn() && isStoreOwner(storeId);
-    }
-
-    /**
-     * @description Allows public read access to subscription plans.
-     * @path /subscription_plans/{subscriptionPlanId}
-     * @allow (get, list) - Allows anyone to read subscription plans.
-     * @deny (create, update, delete) - No one can create, update, or delete subscription plans via the client.
-     * @principle Public read access with no write access.
-     */
-    match /subscription_plans/{subscriptionPlanId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow create, update, delete: if true;
     }
 
     /**
-     * @description Allows a seller to manage their subscription data.
-     * @path /users/{userId}/seller_subscriptions/{sellerSubscriptionId}
-     * @allow (create) - User with UID 'user_abc' can create a seller subscription under /users/user_abc/seller_subscriptions/sub1 if request.resource.data.sellerId == 'user_abc'.
-     * @allow (get, update, delete) - User with UID 'user_abc' can get, update, and delete the seller subscription under /users/user_abc/seller_subscriptions/sub1 if resource.data.sellerId == 'user_abc'.
-     * @deny (create, update, delete) - User with UID 'user_xyz' cannot create/modify/delete the seller subscription under /users/user_abc/seller_subscriptions/sub1.
-     * @principle Enforces document ownership based on Firebase Auth UID and denormalized sellerId.
+     * @description Allows all operations on product documents.
+     * @path /products/{productId}
+     * @allow (create) - Any authenticated user can create a product document.
+     * @allow (get) - Any user can read a product document.
+     * @allow (update) - Any user can update a product document.
+     * @allow (delete) - Any user can delete a product document.
+     * @principle Allows all operations for rapid prototyping.
      */
-    match /users/{userId}/seller_subscriptions/{sellerSubscriptionId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource.data != null;
-      }
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.sellerId == userId;
-      allow update: if isExistingOwner(userId) && resource.data.sellerId == userId;
-      allow delete: if isExistingOwner(userId);
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create, update, delete: if true;
     }
 
     /**
-     * @description Allows management of customer profiles.
-     * @path /customers/{customerId}
-     * @allow (create) - Customer with ID 'customer_abc' can create their profile at /customers/customer_abc if request.resource.data.id == 'customer_abc'.
-     * @allow (get, update, delete) - Customer with ID 'customer_abc' can get, update, and delete their profile at /customers/customer_abc.
-     * @deny (create, update, delete) - User with ID 'customer_xyz' cannot create/modify/delete the profile at /customers/customer_abc.
+     * @description Allows all operations on order documents.
+     * @path /orders/{orderId}
+     * @allow (create) - Any authenticated user can create an order document.
+     * @allow (get) - Any user can read an order document.
+     * @allow (update) - Any user can update an order document.
+     * @allow (delete) - Any user can delete an order document.
+     * @principle Allows all operations for rapid prototyping.
      */
-    match /customers/{customerId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      //NOTE:  Since Customers do not use Firebase Auth, we can't secure their data using request.auth.uid.
-      //Instead, we can enforce that the customer ID in the document matches the customerId in the path.
-      //This requires that the client-side code always sets the 'id' field correctly when creating a customer.
-      function isOwner(customerId) {
-        return request.resource.data.id == customerId; //On create, request.resource.data is available for validation.
-      }
-      function isExistingOwner(customerId) {
-        return resource.data.id == customerId; //On update and delete, resource.data is available for validation.
-      }
-
-      allow get: if isExistingOwner(customerId);
-      allow list: if false; // Listing customers is not allowed.
-      allow create: if request.resource.data.id == customerId; // The document ID should match the customerId in the document.
-      allow update: if isExistingOwner(customerId) && request.resource.data.id == customerId; // The document ID should match the customerId in the document.
-      allow delete: if isExistingOwner(customerId); // The document ID should match the customerId in the document.
+    match /orders/{orderId} {
+      allow get, list: if true;
+      allow create, update, delete: if true;
     }
   }
 }
