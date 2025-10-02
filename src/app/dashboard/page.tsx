@@ -12,8 +12,13 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { ArrowUp, ShoppingBag, BarChart, Users, DollarSign, Ban } from 'lucide-react';
+import { ArrowUp, ShoppingBag, BarChart, Users, DollarSign, Ban, Link as LinkIcon, Copy } from 'lucide-react';
 import { Line, LineChart, CartesianGrid, XAxis, Tooltip } from 'recharts';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
 
 const chartData = [
   { month: 'Jan', totalSales: 186, grossProfit: 80, netProfit: 60 },
@@ -46,6 +51,34 @@ const chartConfig = {
 };
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [storeUrl, setStoreUrl] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user?.displayName) {
+      // In a real production app, you might have a different base URL
+      const baseUrl = window.location.origin;
+      setStoreUrl(`${baseUrl}/store/${user.displayName}`);
+    }
+  }, [user]);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(storeUrl).then(() => {
+      toast({
+        title: "Copied to Clipboard!",
+        description: "Your store link has been copied.",
+      });
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+      toast({
+        title: "Copy Failed",
+        description: "Could not copy the link.",
+        variant: "destructive",
+      });
+    });
+  };
+
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
@@ -99,6 +132,35 @@ export default function Dashboard() {
               <span className="text-red-600 flex items-center"><ArrowUp className="h-3 w-3" /> 0.5%</span> 
               vs last month
             </p>
+          </CardContent>
+        </Card>
+      </div>
+
+       <div className="grid gap-4 md:gap-8 lg:grid-cols-1">
+        <Card>
+          <CardHeader>
+            <CardTitle>Share Your Store</CardTitle>
+            <CardDescription>
+              Here is the link to your storefront. Share it with your customers!
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-2">
+              <div className="relative flex-grow">
+                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  readOnly
+                  value={storeUrl}
+                  className="pl-10"
+                  aria-label="Store URL"
+                />
+              </div>
+              <Button variant="outline" size="icon" onClick={copyToClipboard} disabled={!storeUrl}>
+                <Copy className="h-4 w-4" />
+                <span className="sr-only">Copy Link</span>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
