@@ -18,30 +18,32 @@ export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const hostname = req.headers.get('host');
 
-  // Define your production domain. This should be customized for your app.
+  // Define your production and development domains.
   const PROD_DOMAIN = process.env.PROD_DOMAIN || 'sellquic.com';
+  const DEV_DOMAIN = 'localhost:9002';
 
   let storeId;
 
-  // Check for subdomain in production
   if (hostname) {
     if (process.env.NODE_ENV === 'production' && hostname.endsWith(PROD_DOMAIN)) {
         const parts = hostname.split('.');
-        // Handle root domain (e.g., sellquic.com) and subdomains (e.g., store1.sellquic.com)
         if (parts.length > 2 && parts[0] !== 'www') {
+            storeId = parts[0];
+        }
+    } else if (process.env.NODE_ENV !== 'production' && hostname.endsWith(DEV_DOMAIN)) {
+        const parts = hostname.split('.');
+        if (parts.length > 1 && parts[0] !== 'www') {
             storeId = parts[0];
         }
     }
   }
 
   // If a storeId was found via subdomain and we are on the root path, rewrite to the store page.
-  // This makes `store1.sellquic.com` show the content of `sellquic.com/store/store1`.
   if (storeId && url.pathname === '/') {
     console.log(`Rewriting subdomain to /store/${storeId} for host ${hostname}`);
     return NextResponse.rewrite(new URL(`/store/${storeId}`, req.url));
   }
   
-  // No rewrite is needed for other paths or in development,
-  // as Next.js handles the /store/[storeId] route directly.
+  // No rewrite is needed for other paths or if no storeId is found.
   return NextResponse.next();
 }
