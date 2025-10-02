@@ -11,6 +11,13 @@ import { useAuth } from '@/hooks/use-auth';
 import { format } from 'date-fns';
 import { MoreHorizontal } from 'lucide-react';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -18,6 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 type OrderStatus = 'pending' | 'confirmed' | 'fulfilled';
 
@@ -29,9 +37,17 @@ interface OrderItem {
     image: string | null;
 }
 
+interface CustomerInfo {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+}
+
 interface Order extends DocumentData {
   id: string;
   items: OrderItem[];
+  customerInfo: CustomerInfo;
   totalAmount: number;
   status: OrderStatus;
   createdAt: Timestamp;
@@ -128,53 +144,108 @@ export default function OrdersPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Customer</TableHead>
               <TableHead>Order Details</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="w-[50px] text-right">Actions</TableHead>
+              <TableHead className="w-[100px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center">Loading orders...</TableCell>
+                <TableCell colSpan={6} className="text-center">Loading orders...</TableCell>
               </TableRow>
             ) : orders.length > 0 ? (
               orders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell className="font-medium">{getItemSummary(order.items)}</TableCell>
+                  <TableCell className="font-medium">{order.customerInfo?.name || 'N/A'}</TableCell>
+                  <TableCell>{getItemSummary(order.items)}</TableCell>
                   <TableCell>{order.createdAt ? format(order.createdAt.toDate(), 'PPp') : 'N/A'}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
                   </TableCell>
                   <TableCell className="text-right">GHS {typeof order.totalAmount === 'number' ? order.totalAmount.toFixed(2) : '0.00'}</TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Order actions</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem disabled={order.status === 'confirmed'} onClick={() => handleStatusChange(order.id, 'confirmed')}>
-                          Mark as Confirmed
-                        </DropdownMenuItem>
-                        <DropdownMenuItem disabled={order.status === 'fulfilled'} onClick={() => handleStatusChange(order.id, 'fulfilled')}>
-                          Mark as Fulfilled
-                        </DropdownMenuItem>
-                         <DropdownMenuItem disabled={order.status === 'pending'} onClick={() => handleStatusChange(order.id, 'pending')}>
-                          Mark as Pending
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Dialog>
+                       <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Order actions</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                           <DialogTrigger asChild>
+                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                          </DialogTrigger>
+                          <DropdownMenuItem disabled={order.status === 'confirmed'} onClick={() => handleStatusChange(order.id, 'confirmed')}>
+                            Mark as Confirmed
+                          </DropdownMenuItem>
+                          <DropdownMenuItem disabled={order.status === 'fulfilled'} onClick={() => handleStatusChange(order.id, 'fulfilled')}>
+                            Mark as Fulfilled
+                          </DropdownMenuItem>
+                           <DropdownMenuItem disabled={order.status === 'pending'} onClick={() => handleStatusChange(order.id, 'pending')}>
+                            Mark as Pending
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                       <DialogContent className="sm:max-w-[600px]">
+                        <DialogHeader>
+                            <DialogTitle>Order Details</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <h3 className="font-semibold mb-2">Customer Information</h3>
+                                    <div className="text-sm space-y-1">
+                                        <p><span className="font-medium">Name:</span> {order.customerInfo?.name}</p>
+                                        <p><span className="font-medium">Email:</span> {order.customerInfo?.email}</p>
+                                        <p><span className="font-medium">Phone:</span> {order.customerInfo?.phone}</p>
+                                        <p><span className="font-medium">Address:</span> {order.customerInfo?.address}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold mb-2">Order Summary</h3>
+                                    <div className="text-sm space-y-1">
+                                        <p><span className="font-medium">Order ID:</span> {order.id}</p>
+                                        <p><span className="font-medium">Status:</span> <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge></p>
+                                        <p><span className="font-medium">Total:</span> GHS {order.totalAmount.toFixed(2)}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 className="font-semibold mb-2">Items Ordered</h3>
+                                <div className="space-y-2">
+                                    {order.items.map((item) => (
+                                        <div key={item.productId} className="flex items-center gap-4 p-2 border rounded-md">
+                                            <Image
+                                                src={item.image || 'https://placehold.co/100x100'}
+                                                alt={item.productName}
+                                                width={60}
+                                                height={60}
+                                                className="rounded-md object-cover"
+                                            />
+                                            <div className="flex-1">
+                                                <p className="font-medium">{item.productName}</p>
+                                                <p className="text-sm text-muted-foreground">Qty: {item.quantity} @ GHS {item.price.toFixed(2)}</p>
+                                            </div>
+                                            <p className="font-semibold">GHS {(item.price * item.quantity).toFixed(2)}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center">You have no orders yet.</TableCell>
+                <TableCell colSpan={6} className="text-center">You have no orders yet.</TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -183,3 +254,5 @@ export default function OrdersPage() {
     </Card>
   );
 }
+
+    
