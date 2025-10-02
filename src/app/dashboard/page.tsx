@@ -12,41 +12,33 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { ArrowUp, ShoppingBag, BarChart, Users, DollarSign, Ban, Link as LinkIcon, Copy } from 'lucide-react';
-import { Line, LineChart, CartesianGrid, XAxis, Tooltip } from 'recharts';
+import { ShoppingBag, BarChart, Users, DollarSign, Ban, Link as LinkIcon, Copy, CreditCard, Activity } from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { collection, query, where, onSnapshot, Timestamp, DocumentData } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { format, subDays, startOfDay } from 'date-fns';
 
-const chartData = [
-  { month: 'Jan', totalSales: 186, grossProfit: 80, netProfit: 60 },
-  { month: 'Feb', totalSales: 305, grossProfit: 200, netProfit: 150 },
-  { month: 'Mar', totalSales: 237, grossProfit: 120, netProfit: 90 },
-  { month: 'Apr', totalSales: 73, grossProfit: 190, netProfit: 120 },
-  { month: 'May', totalSales: 209, grossProfit: 130, netProfit: 100 },
-  { month: 'Jun', totalSales: 214, grossProfit: 140, netProfit: 110 },
-  { month: 'Jul', totalSales: 350, grossProfit: 220, netProfit: 180 },
-  { month: 'Aug', totalSales: 280, grossProfit: 180, netProfit: 140 },
-  { month: 'Sep', totalSales: 310, grossProfit: 190, netProfit: 150 },
-  { month: 'Oct', totalSales: 250, grossProfit: 160, netProfit: 120 },
-  { month: 'Nov', totalSales: 290, grossProfit: 180, netProfit: 140 },
-  { month: 'Dec', totalSales: 320, grossProfit: 200, netProfit: 160 },
-];
+
+interface Order extends DocumentData {
+  id: string;
+  totalAmount: number;
+  status: 'awaiting-payment' | 'pending' | 'confirmed' | 'fulfilled';
+  createdAt: Timestamp;
+  customerInfo: {
+    name: string;
+    email: string;
+  };
+}
 
 const chartConfig = {
-  totalSales: {
-    label: 'Total Sales',
-    color: 'hsl(var(--chart-2))',
-  },
-  grossProfit: {
-    label: 'Gross Profit',
-    color: 'hsl(var(--chart-2))',
-  },
-  netProfit: {
-    label: 'Net Profit',
-    color: 'hsl(var(--chart-2))',
+  revenue: {
+    label: 'Revenue',
+    color: 'hsl(var(--primary))',
   },
 };
 
@@ -54,28 +46,86 @@ export default function Dashboard() {
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const [storeUrl, setStoreUrl] = useState('');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
-    // This effect now correctly uses user.storeId, which is fetched by the updated useAuth hook.
     if (!loading && user && user.storeId) {
         const protocol = window.location.protocol;
         const host = window.location.host;
         let url;
         
-        // The storeId is already a URL-safe slug, so no need to convert it again.
         const storeId = user.storeId;
 
         if (process.env.NODE_ENV === 'production') {
-            // In production, we'll use a subdomain format.
-            const domain = host.split('.').slice(-2).join('.'); // a way to get the root domain e.g., sellquic.com
+            const domain = host.split('.').slice(-2).join('.');
             url = `${protocol}//${storeId}.${domain}`;
         } else {
-            // In development, we use a path-based URL.
             url = `${protocol}//${host}/store/${storeId}`;
         }
         setStoreUrl(url);
     }
   }, [user, loading]);
+  
+  useEffect(() => {
+    if (!user) return;
+
+    setDataLoading(true);
+    const q = query(collection(db, 'orders'), where('storeOwnerId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+      setOrders(fetchedOrders);
+      setDataLoading(false);
+    }, (error) => {
+      console.error("Error fetching orders:", error);
+      toast({ title: "Error", description: "Could not load dashboard data.", variant: "destructive" });
+      setDataLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, toast]);
+
+  const {
+    totalRevenue,
+    totalSales,
+    avgSale,
+    newCustomersThisMonth,
+    revenueChartData,
+  } = useMemo(() => {
+    const confirmedOrders = orders.filter(o => o.status === 'confirmed' || o.status === 'fulfilled');
+    
+    const totalRevenue = confirmedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const totalSales = confirmedOrders.length;
+    const avgSale = totalSales > 0 ? totalRevenue / totalSales : 0;
+    
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const uniqueCustomersThisMonth = new Set(
+        orders
+            .filter(o => o.createdAt.toDate() >= startOfThisMonth)
+            .map(o => o.customerInfo.email)
+    );
+    const newCustomersThisMonth = uniqueCustomersThisMonth.size;
+
+    const last30Days = Array.from({ length: 30 }, (_, i) => {
+        const date = subDays(now, i);
+        return format(startOfDay(date), 'yyyy-MM-dd');
+    }).reverse();
+
+    const revenueByDay = confirmedOrders.reduce((acc, order) => {
+        const dateStr = format(order.createdAt.toDate(), 'yyyy-MM-dd');
+        acc[dateStr] = (acc[dateStr] || 0) + order.totalAmount;
+        return acc;
+    }, {} as Record<string, number>);
+
+    const revenueChartData = last30Days.map(date => ({
+        date: format(new Date(date), 'MMM d'),
+        revenue: revenueByDay[date] || 0,
+    }));
+
+    return { totalRevenue, totalSales, avgSale, newCustomersThisMonth, revenueChartData };
+  }, [orders]);
+
 
   const copyToClipboard = () => {
     if (!storeUrl) return;
@@ -99,54 +149,42 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">546</div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <span className="text-green-600 flex items-center"><ArrowUp className="h-3 w-3" /> 0.5%</span> 
-              vs last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gross Profit</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">GHS 835k</div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <span className="text-green-600 flex items-center"><ArrowUp className="h-3 w-3" /> 0.5%</span> 
-              vs last month
-            </p>
+            <div className="text-2xl font-bold">GHS {totalRevenue.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">+20.1% from last month</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
-            <BarChart className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Sales</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">GHS 720.8M</div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <span className="text-green-600 flex items-center"><ArrowUp className="h-3 w-3" /> 0.5%</span> 
-              vs last month
-            </p>
+            <div className="text-2xl font-bold">+{totalSales}</div>
+            <p className="text-xs text-muted-foreground">+180.1% from last month</p>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg. Sale</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">GHS {avgSale.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">+19% from last month</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expenses</CardTitle>
-            <Ban className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">New Customers</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">GHS 20k</div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <span className="text-red-600 flex items-center"><ArrowUp className="h-3 w-3" /> 0.5%</span> 
-              vs last month
-            </p>
+            <div className="text-2xl font-bold">+{newCustomersThisMonth}</div>
+            <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
         </Card>
       </div>
@@ -183,89 +221,36 @@ export default function Dashboard() {
       <div className="grid gap-4 md:gap-8 lg:grid-cols-1">
         <Card>
           <CardHeader>
-            <CardTitle>Total Sales</CardTitle>
+            <CardTitle>Revenue - Last 30 Days</CardTitle>
           </CardHeader>
           <CardContent className="pl-2">
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
-              <LineChart
-                data={chartData}
-                margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="month" tickLine={false} axisLine={false} />
+               <AreaChart data={revenueChartData} margin={{ left: 12, right: 12 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value) => value.slice(0, 3)}
+                />
                 <Tooltip
                   cursor={false}
                   content={
                     <ChartTooltipContent
-                      indicator="line"
-                      labelKey="totalSales"
+                      indicator="dot"
+                      formatter={(value) => `GHS ${Number(value).toFixed(2)}`}
                     />
                   }
                 />
-                <Line
-                  dataKey="totalSales"
-                  type="monotone"
-                  stroke="hsl(var(--chart-2))"
-                  strokeWidth={2}
-                  dot={true}
+                <Area
+                  dataKey="revenue"
+                  type="natural"
+                  fill="var(--color-revenue)"
+                  fillOpacity={0.4}
+                  stroke="var(--color-revenue)"
                 />
-              </LineChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Gross Profit</CardTitle>
-          </CardHeader>
-          <CardContent className="pl-2">
-            <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                <LineChart
-                    data={chartData}
-                    margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
-                >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="month" tickLine={false} axisLine={false} />
-                    <Tooltip
-                        cursor={false}
-                        content={<ChartTooltipContent indicator="line" />}
-                    />
-                    <Line
-                        dataKey="grossProfit"
-                        type="monotone"
-                        stroke="hsl(var(--chart-2))"
-                        strokeWidth={2}
-                        dot={false}
-                    />
-                </LineChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Net Profit</CardTitle>
-          </CardHeader>
-          <CardContent className="pl-2">
-            <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                <LineChart
-                    data={chartData}
-                    margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
-                >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="month" tickLine={false} axisLine={false} />
-                    <Tooltip
-                        cursor={false}
-                        content={<ChartTooltipContent indicator="line" />}
-                    />
-                    <Line
-                        dataKey="netProfit"
-                        type="monotone"
-                        stroke="hsl(var(--chart-2))"
-                        strokeWidth={2}
-                        dot={false}
-                    />
-                </LineChart>
+              </AreaChart>
             </ChartContainer>
           </CardContent>
         </Card>
@@ -273,5 +258,3 @@ export default function Dashboard() {
     </>
   );
 }
-
-    
