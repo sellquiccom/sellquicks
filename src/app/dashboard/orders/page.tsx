@@ -21,10 +21,18 @@ import { useToast } from '@/hooks/use-toast';
 
 type OrderStatus = 'pending' | 'confirmed' | 'fulfilled';
 
+interface OrderItem {
+    productId: string;
+    productName: string;
+    quantity: number;
+    price: number;
+    image: string | null;
+}
+
 interface Order extends DocumentData {
   id: string;
-  productName: string;
-  productPrice: number;
+  items: OrderItem[];
+  totalAmount: number;
   status: OrderStatus;
   createdAt: Timestamp;
 }
@@ -43,7 +51,6 @@ export default function OrdersPage() {
 
     const q = query(collection(db, 'orders'), where('storeOwnerId', '==', user.uid));
     
-    // Use onSnapshot for real-time updates
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const ordersData = querySnapshot.docs.map(doc => {
         const data = doc.data();
@@ -53,7 +60,6 @@ export default function OrdersPage() {
           createdAt: data.createdAt,
         } as Order;
       });
-      // Sort orders by creation date, newest first
       ordersData.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
       setOrders(ordersData);
       setLoading(false);
@@ -67,7 +73,6 @@ export default function OrdersPage() {
       setLoading(false);
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [user, toast]);
 
@@ -102,6 +107,17 @@ export default function OrdersPage() {
     }
   };
 
+  const getItemSummary = (items: OrderItem[]): string => {
+    if (!items || items.length === 0) {
+      return "No items";
+    }
+    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+    if (items.length === 1) {
+        return `${items[0].productName} (x${items[0].quantity})`;
+    }
+    return `${items.length} products, ${totalItems} total items`;
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -112,7 +128,7 @@ export default function OrdersPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Product</TableHead>
+              <TableHead>Order Details</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Amount</TableHead>
@@ -127,12 +143,12 @@ export default function OrdersPage() {
             ) : orders.length > 0 ? (
               orders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.productName}</TableCell>
+                  <TableCell className="font-medium">{getItemSummary(order.items)}</TableCell>
                   <TableCell>{order.createdAt ? format(order.createdAt.toDate(), 'PPp') : 'N/A'}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
                   </TableCell>
-                  <TableCell className="text-right">GHS {order.productPrice.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">GHS {order.totalAmount.toFixed(2)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
