@@ -305,12 +305,12 @@ export default function Home() {
         
         <TakeOrdersSection />
 
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-accent">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
           <div className="container px-4 md:px-6">
             <div className="grid gap-12 lg:grid-cols-2 lg:gap-24">
               <div className="flex flex-col justify-center space-y-8">
                 <div className="space-y-4">
-                  <h2 className="text-4xl font-bold tracking-tighter sm:text-5xl text-accent-foreground">Customize to make it your own</h2>
+                  <h2 className="text-4xl font-bold tracking-tighter sm:text-5xl">Customize to make it your own</h2>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl">
                     Our intuitive platform gives you complete control over your store's design and functionality.
                   </p>
@@ -320,7 +320,7 @@ export default function Home() {
                     <div className="grid gap-1">
                       <div className="flex items-center gap-2">
                         <ArrowRight className="h-5 w-5 text-primary" />
-                        <h3 className="text-xl font-bold text-accent-foreground">Intuitive drag and drop</h3>
+                        <h3 className="text-xl font-bold">Intuitive drag and drop</h3>
                       </div>
                       <p className="text-muted-foreground">
                         Effortlessly add and arrange your text, visuals, buttons and even entire sections.
@@ -331,7 +331,7 @@ export default function Home() {
                     <div className="grid gap-1">
                        <div className="flex items-center gap-2">
                         <ArrowRight className="h-5 w-5 text-primary" />
-                        <h3 className="text-xl font-bold text-accent-foreground">Built-in AI tools</h3>
+                        <h3 className="text-xl font-bold">Built-in AI tools</h3>
                        </div>
                        <p className="text-muted-foreground">
                         Generate product descriptions, suggest designs, and optimize your store with AI.
@@ -342,7 +342,7 @@ export default function Home() {
                     <div className="grid gap-1">
                        <div className="flex items-center gap-2">
                         <ArrowRight className="h-5 w-5 text-primary" />
-                        <h3 className="text-xl font-bold text-accent-foreground">Advanced design features</h3>
+                        <h3 className="text-xl font-bold">Advanced design features</h3>
                        </div>
                        <p className="text-muted-foreground">
                         Fine-tune every detail with custom fonts, colors, and layouts.
@@ -422,7 +422,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="w-full md:h-screen flex items-center bg-white text-black py-12 md:py-0">
+        <section className="w-full md:h-screen flex items-center bg-white py-12 md:py-0">
           <div className="container px-4 md:px-6">
             <div style={{backgroundColor: '#5921c8'}} className="text-white rounded-2xl shadow-lg overflow-hidden">
               <div className="flex justify-between items-center p-4 border-b border-white/20">
@@ -473,7 +473,7 @@ export default function Home() {
           </div>
         </section>
         
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
             <div className="container px-4 md:px-6">
                 <div className="mx-auto max-w-3xl text-center">
                     <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
@@ -516,3 +516,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
