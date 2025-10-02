@@ -19,6 +19,7 @@ import {
   User,
   Users,
   Building,
+  Star,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { getAuth, signOut } from 'firebase/auth';
@@ -175,7 +176,7 @@ export default function DashboardLayout({
             </CollapsibleContent>
           </Collapsible>
           
-          <NavLink href="/dashboard/affiliates" icon={Users}>Affiliates</NavLink>
+          <NavLink href="/dashboard/subscription" icon={Star}>Subscription</NavLink>
           <NavLink href="/dashboard/payments" icon={CreditCard}>Payments</NavLink>
           <NavLink href="/dashboard/deliveries" icon={Truck}>Deliveries</NavLink>
           <NavLink href="/dashboard/settings" icon={Settings}>Store Settings</NavLink>

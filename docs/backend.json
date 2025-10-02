@@ -211,19 +211,15 @@
         },
         "productLimit": {
           "type": "number",
-          "description": "The maximum number of products allowed in this plan."
+          "description": "The maximum number of products allowed in this plan. -1 for unlimited."
         },
         "price": {
           "type": "number",
-          "description": "The price of the subscription plan."
+          "description": "The monthly price of the subscription plan."
         },
-        "enhancedAnalytics": {
-          "type": "boolean",
-          "description": "Indicates whether enhanced analytics are included in this plan."
-        },
-        "whatsappNotifications": {
-          "type": "boolean",
-          "description": "Indicates whether WhatsApp notifications are included in this plan."
+        "yearlyPrice": {
+          "type": "number",
+          "description": "The yearly price of the subscription plan."
         }
       },
       "required": [
@@ -247,9 +243,9 @@
           "type": "string",
           "description": "Reference to the Seller who owns the subscription. (Relationship: Seller 1:N SellerSubscription)"
         },
-        "subscriptionPlanId": {
+        "planId": {
           "type": "string",
-          "description": "Reference to the SubscriptionPlan being used. (Relationship: SubscriptionPlan 1:N SellerSubscription)"
+          "description": "The ID of the subscription plan (e.g., 'free', 'pro')."
         },
         "startDate": {
           "type": "string",
@@ -258,21 +254,21 @@
         },
         "endDate": {
           "type": "string",
-          "description": "The date and time when the subscription ends.",
+          "description": "The date and time when the subscription ends or is next due.",
           "format": "date-time"
         },
-        "paymentLink": {
-          "type": "string",
-          "description": "Link for subscription payments.",
-          "format": "uri"
+        "status": {
+            "type": "string",
+            "description": "The status of the subscription.",
+            "enum": ["active", "cancelled", "past_due"]
         }
       },
       "required": [
         "id",
         "sellerId",
-        "subscriptionPlanId",
+        "planId",
         "startDate",
-        "endDate"
+        "status"
       ]
     },
     "Seller": {
@@ -335,6 +331,9 @@
             "type": "string",
             "description": "The status of the seller's account.",
             "enum": ["active", "suspended"]
+        },
+        "subscription": {
+            "$ref": "#/entities/SellerSubscription"
         }
       },
       "required": [

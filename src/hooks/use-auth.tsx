@@ -7,11 +7,19 @@ import { app, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc, DocumentData } from 'firebase/firestore';
 
+// Define the structure for subscription data
+interface SubscriptionData {
+  planId: 'free' | 'pro';
+  status: 'active' | 'cancelled' | 'past_due';
+  endDate: Date | null;
+}
+
 // Extend the User type to include our custom fields
 interface AppUser extends User {
     businessName?: string;
     storeId?: string;
     isSuperAdmin?: boolean;
+    subscription?: SubscriptionData;
 }
 
 interface AuthContextType {
@@ -33,7 +41,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setLoading(true);
       if (firebaseUser) {
-        // User is signed in, fetch their profile from Firestore
         const userDocRef = doc(db, 'users', firebaseUser.uid);
 
         try {
@@ -47,20 +54,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 ...appUser,
                 businessName: userData.businessName,
                 storeId: userData.storeId,
+                isSuperAdmin: userData.role === 'superadmin',
+                subscription: userData.subscription ? {
+                    planId: userData.subscription.planId || 'free',
+                    status: userData.subscription.status || 'active',
+                    endDate: userData.subscription.endDate?.toDate() || null,
+                } : { planId: 'free', status: 'active', endDate: null },
               };
-              // Check for superadmin role directly on the user document
-              if (userData.role === 'superadmin') {
-                appUser.isSuperAdmin = true;
-              }
+            } else {
+               appUser.subscription = { planId: 'free', status: 'active', endDate: null };
             }
             
             setUser(appUser);
         } catch (error) {
             console.error("Error fetching user data:", error);
-            setUser(firebaseUser as AppUser); // Fallback to basic user
+            const fallbackUser: AppUser = {
+                ...firebaseUser,
+                subscription: { planId: 'free', status: 'active', endDate: null },
+                isSuperAdmin: false
+            };
+            setUser(fallbackUser);
         }
       } else {
-        // User is signed out
         setUser(null);
       }
       setLoading(false);
