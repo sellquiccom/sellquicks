@@ -284,6 +284,23 @@
         "createdAt": {
             "type": "string",
             "format": "date-time"
+        },
+        "twitter": {
+            "type": "string",
+            "description": "The seller's Twitter username."
+        },
+        "facebook": {
+            "type": "string",
+            "description": "The seller's Facebook profile URL.",
+            "format": "uri"
+        },
+        "instagram": {
+            "type": "string",
+            "description": "The seller's Instagram username."
+        },
+        "tiktok": {
+            "type": "string",
+            "description": "The seller's TikTok username."
         }
       },
       "required": [

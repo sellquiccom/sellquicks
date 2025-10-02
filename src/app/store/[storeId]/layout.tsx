@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -5,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { collection, query, where, getDocs, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { StoreHeader } from '@/components/store-header';
+import { StoreFooter } from '@/components/store-footer';
 
 interface StoreData extends DocumentData {
     businessName?: string;
@@ -12,6 +14,10 @@ interface StoreData extends DocumentData {
     logoUrl?: string;
     uid?: string;
     primaryColor?: string;
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+    tiktok?: string;
 }
 
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
@@ -50,9 +56,12 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
   const primaryColor = storeData?.primaryColor;
 
   return (
-    <div style={primaryColor ? { '--primary-dynamic': primaryColor } as React.CSSProperties : {}}>
+    <div className="flex flex-col min-h-screen" style={primaryColor ? { '--primary-dynamic': primaryColor } as React.CSSProperties : {}}>
         <StoreHeader storeData={storeData} />
-        {children}
+        <main className="flex-grow">
+            {children}
+        </main>
+        <StoreFooter storeData={storeData} />
     </div>
   );
 }
