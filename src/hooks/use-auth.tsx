@@ -7,8 +7,10 @@ import { app, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc, DocumentData } from 'firebase/firestore';
 
+// Extend the User type to include our custom fields
 interface AppUser extends User {
     businessName?: string;
+    storeId?: string;
 }
 
 interface AuthContextType {
@@ -29,16 +31,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const auth = getAuth(app);
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in, let's get their profile from Firestore
+        // User is signed in, fetch their profile from Firestore
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const userDoc = await getDoc(userDocRef);
         
-        let appUser: AppUser = { ...firebaseUser, businessName: firebaseUser.displayName };
+        // Start with the base Firebase user object
+        let appUser: AppUser = { ...firebaseUser };
+
         if (userDoc.exists()) {
           const userData = userDoc.data() as DocumentData;
+          // Augment the user object with data from Firestore
           appUser = {
             ...appUser,
-            businessName: userData.businessName || firebaseUser.displayName || undefined,
+            businessName: userData.businessName,
+            storeId: userData.storeId,
           };
         }
         
@@ -76,3 +82,5 @@ export const useRequireAuth = () => {
 
     return { user, loading };
 };
+
+    

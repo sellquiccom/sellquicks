@@ -56,17 +56,22 @@ export default function Dashboard() {
   const [storeUrl, setStoreUrl] = useState('');
 
   useEffect(() => {
-    // We now get businessName directly from our enhanced useAuth hook
-    if (!loading && user && user.businessName) {
+    // This effect now correctly uses user.storeId, which is fetched by the updated useAuth hook.
+    if (!loading && user && user.storeId) {
         const protocol = window.location.protocol;
         const host = window.location.host;
         let url;
-        const businessNameSlug = user.businessName.toLowerCase().replace(/\s+/g, '-');
+        
+        // The storeId is already a URL-safe slug, so no need to convert it again.
+        const storeId = user.storeId;
 
         if (process.env.NODE_ENV === 'production') {
-            url = `${protocol}//${businessNameSlug}.sellquic.com`;
+            // In production, we'll use a subdomain format.
+            const domain = host.split('.').slice(-2).join('.'); // a way to get the root domain e.g., sellquic.com
+            url = `${protocol}//${storeId}.${domain}`;
         } else {
-            url = `${protocol}//${host}/store/${businessNameSlug}`;
+            // In development, we use a path-based URL.
+            url = `${protocol}//${host}/store/${storeId}`;
         }
         setStoreUrl(url);
     }
@@ -268,3 +273,5 @@ export default function Dashboard() {
     </>
   );
 }
+
+    
