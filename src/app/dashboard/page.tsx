@@ -56,24 +56,17 @@ export default function Dashboard() {
   const [storeUrl, setStoreUrl] = useState('');
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && user?.displayName) {
-      const protocol = window.location.protocol;
-      const host = window.location.host; // This includes hostname and port
-      let url;
+    if (user?.displayName) {
+        const protocol = window.location.protocol;
+        const host = window.location.host;
+        let url;
 
-      if (process.env.NODE_ENV === 'production') {
-        // In production, you would construct the subdomain URL
-        // This requires your domain to be set up.
-        // E.g. `https://<displayName>.sellquic.com`
-        // For this example, we'll stick to the path-based URL
-        // but this is where you'd differentiate.
-         url = `${protocol}//${user.displayName}.sellquic.com`;
-
-      } else {
-        // In development, use the path-based structure
-        url = `${protocol}//${host}/store/${user.displayName}`;
-      }
-      setStoreUrl(url);
+        if (process.env.NODE_ENV === 'production') {
+            url = `${protocol}//${user.displayName}.sellquic.com`;
+        } else {
+            url = `${protocol}//${host}/store/${user.displayName}`;
+        }
+        setStoreUrl(url);
     }
   }, [user]);
 
@@ -273,5 +266,3 @@ export default function Dashboard() {
     </>
   );
 }
-
-    
