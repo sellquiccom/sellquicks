@@ -1,0 +1,13 @@
+[
+  {
+    "origin": [
+      "http://localhost:3000",
+      "https://6000-firebase-studio-1759320026292.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev",
+      "https://sellquic.web.app",
+      "https://sellquic.firebaseapp.com"
+    ],
+    "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "responseHeader": ["Content-Type", "Authorization"],
+    "maxAgeSeconds": 3600
+  }
+]
