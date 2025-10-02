@@ -41,7 +41,11 @@ export default function NewProductPage() {
     }
     setIsGenerating(true);
     try {
-      const result = await generateDescription(productName);
+      const result = await generateDescription({
+        name: productName,
+        price: productPrice,
+        stock: productStock,
+      });
       setProductDescription(result.description);
     } catch (error) {
       console.error(error);
@@ -228,5 +232,3 @@ export default function NewProductPage() {
     </Card>
   );
 }
-
-    
