@@ -27,7 +27,7 @@ export default function NewProductPage() {
   const [isSaving, setIsSaving] = useState(false);
   
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const handleGenerateDescription = async () => {
@@ -75,12 +75,16 @@ export default function NewProductPage() {
   };
 
   const handleAddProduct = async () => {
+    if (authLoading) {
+      toast({ title: 'Please wait', description: 'Authentication is still loading.'});
+      return;
+    }
     if (!user) {
       toast({ title: 'Authentication Error', description: 'You must be logged in to add a product.', variant: 'destructive'});
       return;
     }
-    if (!productName || !productPrice) {
-      toast({ title: 'Missing Information', description: 'Please fill out the product name and price.', variant: 'destructive'});
+    if (!productName || !productPrice || !user.displayName) {
+      toast({ title: 'Missing Information', description: 'Please fill out the product name and price, and ensure your business name is set.', variant: 'destructive'});
       return;
     }
 
@@ -88,10 +92,11 @@ export default function NewProductPage() {
     try {
       // In a real app, you would upload images to a service like Firebase Storage
       // and get the URLs. For now, we'll just store the file names as placeholders.
-      const imageUrls = productImages.map(file => file.name);
+      const imageUrls = productImages.map(file => `https://picsum.photos/seed/${file.name}/400/400`);
 
       await addDoc(collection(db, 'products'), {
         userId: user.uid,
+        storeId: user.displayName, // Using displayName (businessName from signup) as storeId
         name: productName,
         price: parseFloat(productPrice),
         stock: parseInt(productStock, 10) || 0,
@@ -214,7 +219,7 @@ export default function NewProductPage() {
             />
           </div>
 
-          <Button onClick={handleAddProduct} size="lg" disabled={isSaving}>
+          <Button onClick={handleAddProduct} size="lg" disabled={isSaving || authLoading}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isSaving ? 'Saving Product...' : 'Add Product'}
           </Button>
@@ -223,3 +228,5 @@ export default function NewProductPage() {
     </Card>
   );
 }
+
+    

@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PlusCircle, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, getDocs, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
@@ -16,21 +15,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/hooks/use-auth';
+import Image from 'next/image';
 
 interface Product extends DocumentData {
   id: string;
   name: string;
   price: string;
   stock: number;
+  images: string[];
 }
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const auth = getAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const fetchProducts = async () => {
       if (user) {
         const q = query(collection(db, 'products'), where('userId', '==', user.uid));
         const querySnapshot = await getDocs(q);
@@ -40,10 +42,15 @@ export default function ProductsPage() {
         setProducts([]);
       }
       setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [auth]);
+    };
+    
+    if (user) {
+        fetchProducts();
+    } else {
+        setLoading(false);
+    }
+    
+  }, [user]);
 
   return (
     <Card>
@@ -64,6 +71,7 @@ export default function ProductsPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[80px]">Image</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
@@ -73,11 +81,20 @@ export default function ProductsPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">Loading products...</TableCell>
+                <TableCell colSpan={5} className="text-center">Loading products...</TableCell>
               </TableRow>
             ) : products.length > 0 ? (
               products.map((product) => (
                 <TableRow key={product.id}>
+                  <TableCell>
+                     <Image
+                        src={product.images && product.images.length > 0 ? product.images[0] : 'https://placehold.co/600x400'}
+                        alt={product.name}
+                        width={40}
+                        height={40}
+                        className="rounded-md object-cover aspect-square"
+                      />
+                  </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>GHS {product.price}</TableCell>
                   <TableCell>{product.stock || 0}</TableCell>
@@ -98,7 +115,7 @@ export default function ProductsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">You haven't added any products yet.</TableCell>
+                <TableCell colSpan={5} className="text-center">You haven't added any products yet.</TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -107,3 +124,5 @@ export default function ProductsPage() {
     </Card>
   );
 }
+
+    

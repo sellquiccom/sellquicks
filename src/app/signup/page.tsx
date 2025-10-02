@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,9 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { MountainIcon } from 'lucide-react';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -21,12 +24,32 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!businessName) {
+        toast({
+            title: 'Business Name Required',
+            description: 'Please enter a name for your store.',
+            variant: 'destructive',
+        });
+        return;
+    }
+
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      // Here you would typically save the businessName to your database (e.g., Firestore)
-      // along with the user's ID.
-      // For now, we'll just redirect to the dashboard.
-      console.log('New user signed up with business name:', businessName);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Use business name as the user's display name, which we'll use for the storeId
+      await updateProfile(user, {
+        displayName: businessName
+      });
+      
+      // Also save user details to a 'users' collection
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email,
+        businessName: businessName,
+        createdAt: new Date(),
+      });
+
       toast({
         title: 'Signup Successful',
         description: 'Your account has been created.',
@@ -103,3 +126,5 @@ export default function SignupPage() {
     </div>
   );
 }
+
+    
