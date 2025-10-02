@@ -211,7 +211,7 @@ export default function OrdersPage() {
                                     <div className="text-sm space-y-1">
                                         <p><span className="font-medium">Order ID:</span> {order.id}</p>
                                         <p><span className="font-medium">Status:</span> <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge></p>
-                                        <p><span className="font-medium">Total:</span> GHS {order.totalAmount.toFixed(2)}</p>
+                                        <p><span className="font-medium">Total:</span> GHS {typeof order.totalAmount === 'number' ? order.totalAmount.toFixed(2) : '0.00'}</p>
                                     </div>
                                 </div>
                             </div>
@@ -219,7 +219,7 @@ export default function OrdersPage() {
                             <div>
                                 <h3 className="font-semibold mb-2">Items Ordered</h3>
                                 <div className="space-y-2">
-                                    {order.items.map((item) => (
+                                    {order.items && order.items.map((item) => (
                                         <div key={item.productId} className="flex items-center gap-4 p-2 border rounded-md">
                                             <Image
                                                 src={item.image || 'https://placehold.co/100x100'}
@@ -254,5 +254,3 @@ export default function OrdersPage() {
     </Card>
   );
 }
-
-    
