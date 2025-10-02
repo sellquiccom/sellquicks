@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PlusCircle, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
-import { collection, query, where, getDocs, DocumentData } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/use-auth';
 import Image from 'next/image';
+import { useToast } from '@/hooks/use-toast';
 
 interface Product extends DocumentData {
   id: string;
@@ -30,27 +31,33 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      if (user) {
-        const q = query(collection(db, 'products'), where('userId', '==', user.uid));
-        const querySnapshot = await getDocs(q);
-        const productsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-        setProducts(productsData);
-      } else {
-        setProducts([]);
-      }
+    if (!user) {
       setLoading(false);
-    };
-    
-    if (user) {
-        fetchProducts();
-    } else {
-        setLoading(false);
+      return;
     }
+
+    const q = query(collection(db, 'products'), where('userId', '==', user.uid));
     
-  }, [user]);
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const productsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+      setProducts(productsData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching products: ", error);
+      toast({
+        title: "Error",
+        description: "Could not fetch products. Please try again later.",
+        variant: "destructive",
+      });
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+    
+  }, [user, toast]);
 
   return (
     <Card>
@@ -106,7 +113,9 @@ export default function ProductsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/dashboard/products/edit/${product.id}`}>Edit</Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -124,5 +133,3 @@ export default function ProductsPage() {
     </Card>
   );
 }
-
-    
