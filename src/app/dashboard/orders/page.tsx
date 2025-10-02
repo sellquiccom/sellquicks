@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -54,7 +53,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-type OrderStatus = 'pending' | 'confirmed' | 'fulfilled';
+type OrderStatus = 'awaiting-payment' | 'pending' | 'confirmed' | 'fulfilled';
 
 interface OrderItem {
   productId: string;
@@ -78,6 +77,7 @@ interface Order extends DocumentData {
   totalAmount: number;
   status: OrderStatus;
   createdAt: Timestamp;
+  paymentReference: string;
 }
 
 const OrderRow = ({ order }: { order: Order }) => {
@@ -125,16 +125,22 @@ const OrderRow = ({ order }: { order: Order }) => {
     status: string
   ): 'destructive' | 'secondary' | 'default' | 'outline' => {
     switch (status) {
-      case 'pending':
+      case 'awaiting-payment':
         return 'destructive';
-      case 'confirmed':
+      case 'pending':
         return 'secondary';
-      case 'fulfilled':
+      case 'confirmed':
         return 'default';
+      case 'fulfilled':
+        return 'default'; // Or a different color like green
       default:
         return 'outline';
     }
   };
+  
+  const getStatusLabel = (status: string) => {
+    return status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
 
   const getItemSummary = (items: OrderItem[]): string => {
     if (!items || items.length === 0) {
@@ -157,11 +163,8 @@ const OrderRow = ({ order }: { order: Order }) => {
             </TableCell>
             <TableCell>{getItemSummary(order.items)}</TableCell>
             <TableCell>
-              {order.createdAt ? format(order.createdAt.toDate(), 'PPp') : 'N/A'}
-            </TableCell>
-            <TableCell>
               <Badge variant={getStatusVariant(order.status)} className="capitalize">
-                {order.status}
+                {getStatusLabel(order.status)}
               </Badge>
             </TableCell>
             <TableCell className="text-right">
@@ -185,10 +188,10 @@ const OrderRow = ({ order }: { order: Order }) => {
         <CollapsibleContent asChild>
           <tr className="bg-muted/50">
             <TableCell colSpan={6}>
-              <div className="grid gap-4 py-4 px-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-6 py-4 px-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="font-semibold mb-2">Customer Information</h3>
+                    <h3 className="font-semibold mb-2">Customer & Order Details</h3>
                     <div className="text-sm space-y-1">
                       <p>
                         <span className="font-medium">Name:</span>{' '}
@@ -202,6 +205,10 @@ const OrderRow = ({ order }: { order: Order }) => {
                         <span className="font-medium">Phone:</span>{' '}
                         {order.customerInfo?.phone}
                       </p>
+                       <p>
+                        <span className="font-medium">Date:</span>{' '}
+                        {order.createdAt ? format(order.createdAt.toDate(), 'PPp') : 'N/A'}
+                      </p>
                       <p>
                         <span className="font-medium">Address:</span>{' '}
                         {order.customerInfo?.address}
@@ -209,32 +216,35 @@ const OrderRow = ({ order }: { order: Order }) => {
                     </div>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-2">Order Summary & Actions</h3>
-                    <div className="text-sm space-y-2">
-                      <p>
-                        <span className="font-medium">Order ID:</span> {order.id}
-                      </p>
-                      <p>
-                        <span className="font-medium">Status:</span>{' '}
-                        <Badge
-                          variant={getStatusVariant(order.status)}
-                          className="capitalize"
-                        >
-                          {order.status}
-                        </Badge>
-                      </p>
-                      <p>
-                        <span className="font-medium">Total:</span> GHS{' '}
-                        {typeof order.totalAmount === 'number'
-                          ? order.totalAmount.toFixed(2)
-                          : '0.00'}
-                      </p>
+                    <h3 className="font-semibold mb-2">Payment & Actions</h3>
+                    <div className="text-sm space-y-2 bg-background p-3 rounded-md border">
+                       <div className='flex justify-between items-center'>
+                          <span className="font-medium">Total:</span> 
+                           <span className="font-bold text-lg">
+                            GHS {typeof order.totalAmount === 'number'
+                                ? order.totalAmount.toFixed(2)
+                                : '0.00'}
+                            </span>
+                      </div>
+                      <div className='flex justify-between items-center'>
+                          <span className="font-medium">Status:</span>{' '}
+                          <Badge
+                            variant={getStatusVariant(order.status)}
+                            className="capitalize"
+                          >
+                            {getStatusLabel(order.status)}
+                          </Badge>
+                      </div>
+                      <div className='flex justify-between items-center'>
+                        <span className="font-medium">Payment Ref:</span>
+                        <span className="font-mono font-bold tracking-wider bg-primary/10 text-primary-foreground p-1 rounded-sm text-black">{order.paymentReference}</span>
+                      </div>
                     </div>
-                    <div className="mt-4 flex items-center gap-2">
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={order.status === 'confirmed'}
+                        disabled={order.status === 'confirmed' || order.status === 'fulfilled' || order.status === 'awaiting-payment'}
                         onClick={() => handleStatusChange(order.id, 'confirmed')}
                       >
                         Mark as Confirmed
@@ -242,7 +252,7 @@ const OrderRow = ({ order }: { order: Order }) => {
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={order.status === 'fulfilled'}
+                        disabled={order.status === 'fulfilled' || order.status !== 'confirmed'}
                         onClick={() => handleStatusChange(order.id, 'fulfilled')}
                       >
                         Mark as Fulfilled
@@ -250,7 +260,7 @@ const OrderRow = ({ order }: { order: Order }) => {
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                            <Button size="sm" variant="destructive" className="ml-auto">
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete Order
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
                            </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
@@ -370,7 +380,6 @@ export default function OrdersPage() {
             <TableRow>
               <TableHead>Customer</TableHead>
               <TableHead>Order Details</TableHead>
-              <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead className="w-[120px] text-right">Actions</TableHead>
