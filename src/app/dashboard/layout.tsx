@@ -18,6 +18,7 @@ import {
   Truck,
   User,
   Users,
+  Building,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { getAuth, signOut } from 'firebase/auth';
@@ -46,6 +47,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useRequireAuth, useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
 
 const NavLink = ({ href, children, icon: Icon, active, isSubmenu = false, ...props }: { href: string; children: React.ReactNode; icon: React.ElementType; active?: boolean; isSubmenu?: boolean }) => {
   const pathname = usePathname();
@@ -177,6 +179,15 @@ export default function DashboardLayout({
           <NavLink href="/dashboard/payments" icon={CreditCard}>Payments</NavLink>
           <NavLink href="/dashboard/deliveries" icon={Truck}>Deliveries</NavLink>
           <NavLink href="/dashboard/settings" icon={Settings}>Store Settings</NavLink>
+          
+          {user.isSuperAdmin && (
+            <>
+                <Separator className="my-4" />
+                <p className="px-3 pb-2 text-xs text-gray-500">ADMIN</p>
+                <NavLink href="/superadmin" icon={Building}>Super Admin</NavLink>
+            </>
+          )}
+
         </nav>
       </div>
       <div className="mt-auto p-4 border-t">

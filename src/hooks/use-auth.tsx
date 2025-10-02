@@ -31,32 +31,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const auth = getAuth(app);
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true); // Set loading to true at the start of auth check
       if (firebaseUser) {
         // User is signed in, fetch their profile from Firestore
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const superAdminDocRef = doc(db, 'superadmins', firebaseUser.uid);
 
-        const userDocPromise = getDoc(userDocRef);
-        const superAdminDocPromise = getDoc(superAdminDocRef);
+        try {
+            const [userDoc, superAdminDoc] = await Promise.all([
+                getDoc(userDocRef),
+                getDoc(superAdminDocRef)
+            ]);
+            
+            let appUser: AppUser = { ...firebaseUser, isSuperAdmin: false };
 
-        const [userDoc, superAdminDoc] = await Promise.all([userDocPromise, superAdminDocPromise]);
-        
-        let appUser: AppUser = { ...firebaseUser, isSuperAdmin: false };
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data() as DocumentData;
-          appUser = {
-            ...appUser,
-            businessName: userData.businessName,
-            storeId: userData.storeId,
-          };
+            if (userDoc.exists()) {
+              const userData = userDoc.data() as DocumentData;
+              appUser = {
+                ...appUser,
+                businessName: userData.businessName,
+                storeId: userData.storeId,
+              };
+            }
+            
+            if (superAdminDoc.exists() && superAdminDoc.data()?.role === 'superadmin') {
+                appUser.isSuperAdmin = true;
+            }
+            
+            setUser(appUser);
+        } catch (error) {
+            console.error("Error fetching user data:", error);
+            setUser(firebaseUser as AppUser); // Fallback to basic user
         }
-        
-        if (superAdminDoc.exists() && superAdminDoc.data()?.role === 'superadmin') {
-            appUser.isSuperAdmin = true;
-        }
-        
-        setUser(appUser);
       } else {
         // User is signed out
         setUser(null);
