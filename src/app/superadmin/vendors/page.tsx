@@ -7,10 +7,10 @@ import { db } from '@/lib/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, addYears } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { MoreHorizontal, Trash2, Ban, CheckCircle } from 'lucide-react';
+import { MoreHorizontal, Trash2, Ban, CheckCircle, Star } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +39,9 @@ interface Vendor extends DocumentData {
   storeId: string;
   createdAt: Timestamp;
   status?: 'active' | 'suspended';
+  subscription?: {
+      planId: 'free' | 'pro';
+  }
 }
 
 const getInitials = (name: string) => {
@@ -88,6 +91,38 @@ export default function VendorsPage() {
         toast({ title: "Delete Failed", variant: "destructive" });
     }
   };
+  
+  const handlePlanChange = async (vendorId: string, planId: 'free' | 'pro') => {
+    const vendorRef = doc(db, 'users', vendorId);
+    try {
+        let subscriptionData;
+        if (planId === 'pro') {
+            subscriptionData = {
+                planId: 'pro',
+                status: 'active',
+                startDate: new Date(),
+                endDate: addYears(new Date(), 1),
+            };
+        } else {
+             subscriptionData = {
+                planId: 'free',
+                status: 'active',
+                startDate: new Date(),
+                endDate: null,
+            };
+        }
+
+        await updateDoc(vendorRef, { subscription: subscriptionData });
+        toast({
+            title: `Plan Changed to ${planId.toUpperCase()}`,
+            description: `The vendor has been moved to the ${planId} plan.`,
+        });
+    } catch (error) {
+        console.error("Error changing plan:", error);
+        toast({ title: "Plan Change Failed", variant: "destructive" });
+    }
+  };
+
 
   if (loading) {
     return <p>Loading vendors...</p>;
@@ -105,6 +140,7 @@ export default function VendorsPage() {
             <TableRow>
               <TableHead>Vendor</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Plan</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Joined</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -128,11 +164,16 @@ export default function VendorsPage() {
                 </TableCell>
                 <TableCell>{vendor.email}</TableCell>
                 <TableCell>
+                     <Badge variant={vendor.subscription?.planId === 'pro' ? 'default' : 'secondary'} className="capitalize">
+                       {vendor.subscription?.planId || 'free'}
+                    </Badge>
+                </TableCell>
+                <TableCell>
                     <Badge variant={vendor.status === 'suspended' ? 'destructive' : 'default'} className="capitalize">
                         {vendor.status || 'active'}
                     </Badge>
                 </TableCell>
-                <TableCell>{formatDistanceToNow(vendor.createdAt.toDate(), { addSuffix: true })}</TableCell>
+                <TableCell>{vendor.createdAt ? formatDistanceToNow(vendor.createdAt.toDate(), { addSuffix: true }) : 'N/A'}</TableCell>
                 <TableCell className="text-right">
                     <AlertDialog>
                       <DropdownMenu>
@@ -145,6 +186,16 @@ export default function VendorsPage() {
                             <DropdownMenuItem asChild>
                                  <Link href={`/store/${vendor.storeId}`} target="_blank">View Store</Link>
                             </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                             {vendor.subscription?.planId !== 'pro' ? (
+                                <DropdownMenuItem onClick={() => handlePlanChange(vendor.uid, 'pro')}>
+                                    <Star className="mr-2 h-4 w-4" /> Upgrade to Pro
+                                </DropdownMenuItem>
+                            ) : (
+                                <DropdownMenuItem onClick={() => handlePlanChange(vendor.uid, 'free')}>
+                                    <Star className="mr-2 h-4 w-4" /> Downgrade to Free
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             {vendor.status !== 'suspended' ? (
                                 <DropdownMenuItem onClick={() => handleStatusChange(vendor.uid, 'suspended')}>
@@ -182,7 +233,7 @@ export default function VendorsPage() {
             ))}
             {vendors.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   No vendors have signed up yet.
                 </TableCell>
               </TableRow>
