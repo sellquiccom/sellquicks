@@ -1,16 +1,13 @@
 
-export function generateOrderCode(length: number = 6): string {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    // Add a dash for readability, e.g., ABC-DEF
-    if (length > 4) {
-        const mid = Math.floor(length / 2);
-        result = result.substring(0, mid) + '-' + result.substring(mid);
-    }
-    return result;
-}
-
+export function generateOrderCode(businessName: string): string {
+    // Take the first 4 characters of the business name, make them uppercase, and remove spaces.
+    const prefix = businessName.replace(/\s+/g, '').substring(0, 4).toUpperCase();
     
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+    let randomPart = '';
+    for (let i = 0; i < 7; i++) {
+        randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    return `${prefix}-${randomPart}`;
+}

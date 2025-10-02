@@ -24,6 +24,11 @@ interface DeliveryOption extends DocumentData {
     fee: number;
 }
 
+interface SellerData extends DocumentData {
+    businessName: string;
+    primaryColor: string;
+}
+
 export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
   const router = useRouter();
@@ -36,12 +41,13 @@ export default function CheckoutPage() {
 
   const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryOption | null>(null);
+  const [sellerData, setSellerData] = useState<SellerData | null>(null);
 
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const [primaryColor, setPrimaryColor] = useState<string | undefined>();
   
   const shippingCost = selectedDelivery ? selectedDelivery.fee : 0;
   const finalTotal = totalPrice + shippingCost;
+  const primaryColor = sellerData?.primaryColor;
 
 
   useEffect(() => {
@@ -50,11 +56,11 @@ export default function CheckoutPage() {
     const storeOwnerId = cart[0].userId;
     if (!storeOwnerId) return;
 
-    // Fetch primary color
+    // Fetch seller data (for business name and color)
     const userDocRef = doc(db, 'users', storeOwnerId);
     getDoc(userDocRef).then(docSnap => {
         if(docSnap.exists()){
-            setPrimaryColor(docSnap.data().primaryColor);
+            setSellerData(docSnap.data() as SellerData);
         }
     });
 
@@ -82,6 +88,10 @@ export default function CheckoutPage() {
         toast({ title: 'Please select a delivery option', variant: 'destructive' });
         return;
     }
+     if (!sellerData || !sellerData.businessName) {
+        toast({ title: 'Seller information is missing', variant: 'destructive' });
+        return;
+    }
     
     // Group items by seller (storeOwnerId) - this is a bit redundant now but good practice
     const ordersByStore: { [key: string]: typeof cart } = cart.reduce((acc, item) => {
@@ -105,7 +115,7 @@ export default function CheckoutPage() {
       const storeOwnerId = Object.keys(ordersByStore)[0];
       const storeItems = ordersByStore[storeOwnerId];
       const storeId = storeItems[0]?.storeId;
-      const paymentReference = generateOrderCode();
+      const paymentReference = generateOrderCode(sellerData.businessName);
 
       const newOrderRef = await addDoc(collection(db, 'orders'), {
             storeOwnerId,
