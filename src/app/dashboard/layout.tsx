@@ -4,7 +4,6 @@
 import Link from 'next/link';
 import {
   Bell,
-  Book,
   ChevronDown,
   ChevronRight,
   CreditCard,
@@ -79,7 +78,6 @@ export default function DashboardLayout({
   const router = useRouter();
   const { toast } = useToast();
   const [isProductsOpen, setIsProductsOpen] = React.useState(pathname.startsWith('/dashboard/products'));
-  const [isBookkeepingOpen, setIsBookkeepingOpen] = React.useState(pathname.startsWith('/dashboard/bookkeeping'));
   const [isAnalyticsOpen, setIsAnalyticsOpen] = React.useState(pathname.startsWith('/dashboard/analytics'));
 
   const handleLogout = async () => {
@@ -158,19 +156,6 @@ export default function DashboardLayout({
           
           <NavLink href="/dashboard/orders" icon={ShoppingCart}>Orders</NavLink>
           
-          <Collapsible open={isBookkeepingOpen} onOpenChange={setIsBookkeepingOpen}>
-            <CollapsibleTrigger className="w-full">
-              <div className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900", isBookkeepingOpen && "bg-gray-100 text-gray-900")}>
-                <Book className="h-4 w-4" />
-                Bookkeeping
-                <ChevronRight className={cn("ml-auto h-4 w-4 transition-transform", isBookkeepingOpen && "rotate-90")} />
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="py-1">
-              {/* Add bookkeeping sublinks here */}
-            </CollapsibleContent>
-          </Collapsible>
-
           <Collapsible open={isAnalyticsOpen} onOpenChange={setIsAnalyticsOpen}>
              <CollapsibleTrigger className="w-full">
                 <div className={cn("flex items-center justify-between w-full gap-3 rounded-lg px-3 py-2 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900", isAnalyticsOpen && "bg-gray-100 text-gray-900")}>
