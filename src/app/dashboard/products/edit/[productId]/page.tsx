@@ -139,6 +139,10 @@ export default function EditProductPage() {
   };
   
   const deleteImage = async (imageUrl: string) => {
+    // Only try to delete from storage if it's a firebase storage URL
+    if (!imageUrl.includes('firebasestorage.googleapis.com')) {
+        return; 
+    }
     try {
       const imageRef = ref(storage, imageUrl);
       await deleteObject(imageRef);
@@ -210,6 +214,10 @@ export default function EditProductPage() {
     return <div className="flex h-full items-center justify-center">Product not found.</div>;
   }
 
+  // Fallback for image display if product.images is undefined
+  const displayImages = product.images || [];
+  const totalImageCount = displayImages.length + newImages.length;
+
   return (
     <Card>
       <CardHeader>
@@ -253,7 +261,7 @@ export default function EditProductPage() {
           <div className="space-y-2">
             <Label>Product Images</Label>
             <div className="grid grid-cols-3 gap-4">
-              {product.images.map((url) => (
+              {displayImages.map((url) => (
                 <div key={url} className="relative group aspect-square">
                   <Image src={url} alt="Product image" fill className="object-cover rounded-md" />
                   <button 
@@ -273,7 +281,7 @@ export default function EditProductPage() {
                   </button>
                 </div>
               ))}
-              {product.images.length + newImages.length < 3 && (
+              {totalImageCount < 3 && (
                 <div className="border-2 border-dashed border-gray-300 rounded-md aspect-square flex items-center justify-center">
                    <Label htmlFor="image-upload" className="cursor-pointer text-center p-4">
                     <UploadCloud className="h-8 w-8 mx-auto text-gray-400" />
@@ -312,3 +320,5 @@ export default function EditProductPage() {
     </Card>
   );
 }
+
+    
