@@ -88,6 +88,11 @@ body {
 }
 
 @layer utilities {
+  .bg-grid-glow {
+    background-image: radial-gradient(circle at 50% 50%, rgba(0, 128, 128, 0.15), transparent 40%), url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="rgba(255,255,255,0.05)"><path d="M0 .5H32V32"/></svg>');
+    background-size: 100% 100%, 32px 32px;
+  }
+
   @keyframes slide-up {
     0% { transform: translateY(100%); opacity: 0; }
     100% { transform: translateY(0); opacity: 1; }

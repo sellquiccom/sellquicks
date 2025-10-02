@@ -1,9 +1,14 @@
 
+'use client';
+
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { MountainIcon, ArrowRight, Monitor, Smartphone, RefreshCw, Blend, ToyBrick, Bot, Sparkles, Package, ShoppingCart, BarChart2, DollarSign, Users, MoreHorizontal, CircleUser, Bell, Search, Home as HomeIcon, Package2, CreditCard, Activity, ArrowUp, ArrowDown } from "lucide-react";
+import { MountainIcon, ArrowRight, Monitor, Smartphone, RefreshCw, Blend, ToyBrick, Bot, Sparkles, Package, ShoppingCart, BarChart2, DollarSign, Users, MoreHorizontal, CircleUser, Bell, Search, Home as HomeIcon, Package2, CreditCard, Activity, ArrowUp, ArrowDown, X, Info, Ship } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import { CountryFlag } from '@/components/country-flag';
 
 const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType, title: string, description: string }) => (
   <div className="flex flex-col items-start gap-2">
@@ -34,37 +39,6 @@ function ChevronDownIcon(props: React.SVGProps<SVGSVGElement>) {
   )
 }
 
-const steps = [
-    {
-        title: "Pick a platform.",
-        description: "Sign up for a secure and reliable free storefront with SellQuic."
-    },
-    {
-        title: "Plan out your store.",
-        description: "Map out your goals, product collections, and who your audience is."
-    },
-    {
-        title: "Start creating.",
-        description: "Use our intuitive tools or AI website builder to get started in minutes."
-    },
-    {
-        title: "Customize your website.",
-        description: "Use the drag and drop editor and tailor your site to fit your brand."
-    },
-    {
-        title: "Optimize for search engines.",
-        description: "Increase your site's visibility with a suite of built-in SEO tools."
-    },
-    {
-        title: "Publish your website.",
-        description: "Register and connect a custom domain name and go live."
-    },
-    {
-        title: "Promote and drive traffic.",
-        description: "Use built-in marketing tools to grow and expand your reach."
-    }
-];
-
 const faqs = [
     {
         question: "What is SellQuic?",
@@ -87,6 +61,110 @@ const faqs = [
         answer: "Absolutely! While we provide a free `sellquic.com` subdomain to get you started, you can easily connect your own custom domain name to your store for a more professional, branded look. This feature is available on all our paid plans."
     }
 ];
+
+const countries = [
+  { code: 'DE', name: 'Germany', currency: 'EUR', price: '89.99€', cta: 'Jetzt Kaufen' },
+  { code: 'IT', name: 'Italy', currency: 'EUR', price: '95,50 €', cta: 'Acquista ora' },
+  { code: 'JP', name: 'Japan', currency: 'JPY', price: '19,600¥', cta: '今すぐ購入' },
+  { code: 'MX', name: 'Mexico', currency: 'MXN', price: '$1,950', cta: 'Comprar ahora' },
+  { code: 'ES', name: 'Spain', currency: 'EUR', price: '89,99 €', cta: 'Comprar ahora' },
+];
+
+const InternationalSection = () => {
+    const [activeCountry, setActiveCountry] = useState(countries[2]);
+
+    return (
+        <section className="w-full bg-gray-950 text-white py-24 sm:py-32">
+            <div className="container mx-auto px-4 md:px-6">
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                    <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Sell anywhere</h2>
+                    <p className="mt-4 text-gray-400 md:text-xl">
+                        Reach customers around the world with localized shopping experiences and seamless international shipping.
+                    </p>
+                </div>
+                <div 
+                    className="relative min-h-[480px] bg-grid-glow rounded-2xl border border-white/10 p-8 flex items-center justify-center"
+                >
+                    <div className="absolute left-8 top-1/2 -translate-y-1/2 flex flex-col gap-3">
+                        {countries.map(country => (
+                            <button key={country.code} onClick={() => setActiveCountry(country)} className="group">
+                                <CountryFlag 
+                                    countryCode={country.code} 
+                                    isActive={activeCountry.code === country.code}
+                                />
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="relative w-[500px] h-[300px]">
+                        {countries.map((country, index) => (
+                            <div
+                                key={country.code}
+                                className="absolute inset-0 transition-all duration-500 ease-in-out"
+                                style={{
+                                    transform: `
+                                        rotate(${index * 5 - (countries.indexOf(activeCountry) * 5)}deg) 
+                                        translateX(${index * 20 - (countries.indexOf(activeCountry) * 20)}px)
+                                        translateZ(-${Math.abs(index - countries.indexOf(activeCountry)) * 50}px)
+                                    `,
+                                    opacity: country.code === activeCountry.code ? 1 : 0.5,
+                                    zIndex: countries.length - Math.abs(index - countries.indexOf(activeCountry)),
+                                }}
+                            >
+                                <div className={cn("w-[280px] mx-auto bg-white/90 backdrop-blur-sm text-black rounded-xl shadow-2xl p-4 transition-transform duration-500", country.code === activeCountry.code && "scale-105")}>
+                                    <div className="relative aspect-[3/4] rounded-lg overflow-hidden mb-3">
+                                        <Image src="https://picsum.photos/seed/fashion-woman/300/400" alt="Model" layout="fill" className="object-cover" data-ai-hint="fashion woman" />
+                                    </div>
+                                    <div className="flex justify-between items-center mb-3">
+                                        <div className="flex items-center gap-2 bg-gray-200 rounded-full pl-1 pr-3 py-1 text-sm">
+                                            <CountryFlag countryCode={country.code} className="w-5 h-5 shadow-sm" />
+                                            <span>Order for {country.price}</span>
+                                        </div>
+                                    </div>
+                                    <Button className="w-full bg-gray-800 hover:bg-gray-700">{country.cta}</Button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div className="absolute right-[-60px] top-1/2 -translate-y-1/2 w-[380px] bg-white text-black rounded-lg shadow-2xl p-4 hidden lg:block animate-slide-up">
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="font-semibold">Buy 11 shipping labels</h4>
+                            <X className="h-4 w-4 text-gray-500 cursor-pointer" />
+                        </div>
+                        <div className="space-y-2 text-sm border-b pb-3 mb-3">
+                           <div className="flex justify-between items-center">
+                                <span className="flex items-center gap-2"><Ship className="h-4 w-4 text-blue-500" /> 3 x USPS Ground Advantage</span>
+                                <span>$60.17 USD</span>
+                           </div>
+                           <div className="flex justify-between items-center">
+                                <span className="flex items-center gap-2"><Ship className="h-4 w-4 text-yellow-600" /> 4 x UPS® Ground Saver</span>
+                                <span>$118.09 USD</span>
+                           </div>
+                           <div className="flex justify-between items-center">
+                                <span className="flex items-center gap-2"><Ship className="h-4 w-4 text-red-500" /> 4 x DHL Express Worldwide</span>
+                                <span>$691.76 USD</span>
+                           </div>
+                        </div>
+                         <div className="space-y-1 text-sm text-gray-600">
+                             <div className="flex justify-between"><span>Subtotal</span><span>$870.02 USD</span></div>
+                             <div className="flex justify-between text-green-600"><span>SellQuic Plan Discount</span><span>-$101.49 USD</span></div>
+                             <div className="flex justify-between"><span>Insurance</span><span>Included</span></div>
+                         </div>
+                         <div className="flex justify-between items-center font-bold text-lg border-t pt-2 mt-2">
+                             <span>Total <Info className="h-3 w-3 inline text-gray-400"/></span>
+                             <span>$768.53 USD</span>
+                         </div>
+                         <div className="flex justify-between items-center mt-4">
+                            <Button variant="ghost">Cancel</Button>
+                            <Button>Buy 11 shipping labels</Button>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+};
 
 
 export default function Home() {
@@ -155,6 +233,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <InternationalSection />
 
         <section className="w-full py-12 md:py-24 lg:py-32 bg-accent">
           <div className="container px-4 md:px-6">
