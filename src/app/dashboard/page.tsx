@@ -51,24 +51,26 @@ const chartConfig = {
 };
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
   const [storeUrl, setStoreUrl] = useState('');
 
   useEffect(() => {
-    if (user && user.displayName) {
+    // We now get businessName directly from our enhanced useAuth hook
+    if (!loading && user && user.businessName) {
         const protocol = window.location.protocol;
         const host = window.location.host;
         let url;
+        const businessNameSlug = user.businessName.toLowerCase().replace(/\s+/g, '-');
 
         if (process.env.NODE_ENV === 'production') {
-            url = `${protocol}//${user.displayName}.sellquic.com`;
+            url = `${protocol}//${businessNameSlug}.sellquic.com`;
         } else {
-            url = `${protocol}//${host}/store/${user.displayName}`;
+            url = `${protocol}//${host}/store/${businessNameSlug}`;
         }
         setStoreUrl(url);
     }
-  }, [user, user?.displayName]);
+  }, [user, loading]);
 
   const copyToClipboard = () => {
     if (!storeUrl) return;
@@ -159,12 +161,12 @@ export default function Dashboard() {
                 <Input
                   type="text"
                   readOnly
-                  value={storeUrl || 'Loading your store link...'}
+                  value={loading ? 'Loading your store link...' : storeUrl || 'Could not generate store link.'}
                   className="pl-10"
                   aria-label="Store URL"
                 />
               </div>
-              <Button variant="outline" size="icon" onClick={copyToClipboard} disabled={!storeUrl}>
+              <Button variant="outline" size="icon" onClick={copyToClipboard} disabled={!storeUrl || loading}>
                 <Copy className="h-4 w-4" />
                 <span className="sr-only">Copy Link</span>
               </Button>

@@ -44,7 +44,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { useRequireAuth } from '@/hooks/use-auth';
+import { useRequireAuth, useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
 const NavLink = ({ href, children, icon: Icon, active, isSubmenu = false, ...props }: { href: string; children: React.ReactNode; icon: React.ElementType; active?: boolean; isSubmenu?: boolean }) => {
@@ -72,7 +72,8 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useRequireAuth();
+  useRequireAuth();
+  const { user, loading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
@@ -104,6 +105,11 @@ export default function DashboardLayout({
     return null; // or a loading spinner, since useRequireAuth will redirect
   }
 
+  const getInitials = (name?: string | null) => {
+    if (!name) return 'S';
+    return name.charAt(0).toUpperCase();
+  };
+
   const sidebarNav = (
     <div className="flex h-full max-h-screen flex-col">
       <div className="flex h-16 items-center border-b px-4 lg:h-[68px] lg:px-6">
@@ -111,9 +117,9 @@ export default function DashboardLayout({
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 text-lg font-semibold">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className='bg-primary text-primary-foreground'>S</AvatarFallback>
+                <AvatarFallback className='bg-primary text-primary-foreground'>{getInitials(user.businessName)}</AvatarFallback>
               </Avatar>
-              <span className='hidden md:inline'>Silas Shoe Store</span>
+              <span className='hidden md:inline'>{user.businessName || 'My Store'}</span>
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

@@ -83,7 +83,7 @@ export default function NewProductPage() {
       toast({ title: 'Authentication Error', description: 'You must be logged in to add a product.', variant: 'destructive'});
       return;
     }
-    if (!productName || !productPrice || !user.displayName) {
+    if (!productName || !productPrice || !user.businessName) {
       toast({ title: 'Missing Information', description: 'Please fill out the product name and price, and ensure your business name is set.', variant: 'destructive'});
       return;
     }
@@ -91,12 +91,12 @@ export default function NewProductPage() {
     setIsSaving(true);
     try {
       // In a real app, you would upload images to a service like Firebase Storage
-      // and get the URLs. For now, we'll just store the file names as placeholders.
+      // and get the URLs. For now, we'll just store placeholder image URLs.
       const imageUrls = productImages.map(file => `https://picsum.photos/seed/${file.name}/400/400`);
 
       await addDoc(collection(db, 'products'), {
         userId: user.uid,
-        storeId: user.displayName, // Using displayName (businessName from signup) as storeId
+        storeId: user.businessName.toLowerCase().replace(/\s+/g, '-'), // Use business name as storeId
         name: productName,
         price: parseFloat(productPrice),
         stock: parseInt(productStock, 10) || 0,

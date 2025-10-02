@@ -36,8 +36,11 @@ export default function SignupPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      
+      // Sanitize business name for use in URL
+      const businessNameSlug = businessName.toLowerCase().replace(/\s+/g, '-');
 
-      // Use business name as the user's display name, which we'll use for the storeId
+      // Use the original business name for display, and the slug for ID purposes.
       await updateProfile(user, {
         displayName: businessName
       });
@@ -46,7 +49,8 @@ export default function SignupPage() {
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         email: user.email,
-        businessName: businessName,
+        businessName: businessName, // The original name for display
+        storeId: businessNameSlug, // The URL-safe slug
         createdAt: new Date(),
       });
 
@@ -126,5 +130,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
-    
