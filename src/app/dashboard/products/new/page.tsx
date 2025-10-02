@@ -30,6 +30,7 @@ export default function NewProductPage() {
   const [productCategory, setProductCategory] = useState('');
   const [productDescription, setProductDescription] = useState('');
   const [productImages, setProductImages] = useState<File[]>([]);
+  const [sellingStatus, setSellingStatus] = useState('none');
   const [categories, setCategories] = useState<Category[]>([]);
   
   const [isGenerating, setIsGenerating] = useState(false);
@@ -137,6 +138,7 @@ export default function NewProductPage() {
         category: productCategory,
         description: productDescription,
         images: imageUrls,
+        sellingStatus: sellingStatus,
         createdAt: new Date(),
       });
 
@@ -216,6 +218,20 @@ export default function NewProductPage() {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="selling-status">Selling Status</Label>
+            <Select value={sellingStatus} onValueChange={setSellingStatus} disabled={isSaving}>
+                <SelectTrigger id="selling-status">
+                    <SelectValue placeholder="Select a status" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="best-seller">Best Seller</SelectItem>
+                    <SelectItem value="new-arrival">New Arrival</SelectItem>
+                </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label>Product Images</Label>
             <div className="grid grid-cols-3 gap-4">
               {productImages.map((file, index) => (
@@ -278,3 +294,5 @@ export default function NewProductPage() {
     </Card>
   );
 }
+
+    

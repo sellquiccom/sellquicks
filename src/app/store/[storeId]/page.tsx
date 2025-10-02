@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -5,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { getStoreIdentifier } from '@/lib/store';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { collection, query, where, getDocs, doc, getDoc, DocumentData, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/hooks/use-cart';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export interface Product extends DocumentData {
   id: string;
@@ -19,6 +21,7 @@ export interface Product extends DocumentData {
   description: string;
   category: string;
   userId: string;
+  sellingStatus?: 'best-seller' | 'new-arrival' | 'none';
 }
 
 interface StoreData extends DocumentData {
@@ -71,11 +74,24 @@ const ProductCard = ({ product, storeId }: { product: Product; storeId: string |
 };
 
 
+const ProductGrid = ({ products, storeId }: { products: Product[]; storeId: string | null; }) => {
+    if (products.length === 0) return null;
+    return (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {products.map((product) => (
+                <ProductCard key={product.id} product={product} storeId={storeId} />
+            ))}
+        </div>
+    );
+};
+
+
 export default function StorePage({ params }: { params: { storeId: string } }) {
   const [storeId, setStoreId] = useState<string | null>(null);
   const [storeData, setStoreData] = useState<StoreData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
     const identifiedStoreId = getStoreIdentifier(params.storeId);
@@ -116,6 +132,25 @@ export default function StorePage({ params }: { params: { storeId: string } }) {
     fetchStoreData();
   }, [storeId]);
   
+  const { bestSellers, newArrivals, otherProducts } = useMemo(() => {
+    const bestSellers = products.filter(p => p.sellingStatus === 'best-seller');
+    const newArrivals = products.filter(p => p.sellingStatus === 'new-arrival');
+    const otherProducts = products.filter(p => !p.sellingStatus || p.sellingStatus === 'none');
+    return { bestSellers, newArrivals, otherProducts };
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    switch (activeTab) {
+      case 'best-sellers':
+        return bestSellers;
+      case 'new-arrivals':
+        return newArrivals;
+      default:
+        return products;
+    }
+  }, [activeTab, products, bestSellers, newArrivals]);
+
+
   if (loading) {
     return <div className="flex h-screen items-center justify-center">Loading store...</div>;
   }
@@ -130,7 +165,7 @@ export default function StorePage({ params }: { params: { storeId: string } }) {
             <Image
                 src={storeData.bannerUrl}
                 alt={`${storeName} banner`}
-                layout="fill"
+                fill
                 className="object-cover"
                 priority
             />
@@ -159,34 +194,58 @@ export default function StorePage({ params }: { params: { storeId: string } }) {
         </header>
 
         <main>
-          {products.length > 0 ? (
-            <section>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-foreground">Our Products</h2>
-                <Link href="#" className="text-sm font-medium text-[var(--primary-dynamic,hsl(var(--primary)))] hover:underline flex items-center gap-1">
-                  View All <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {products.map((product) => (
-                  <ProductCard key={product.id} product={product} storeId={storeId} />
-                ))}
-              </div>
-            </section>
-          ) : (
-             <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm py-20">
-              <div className="flex flex-col items-center gap-1 text-center">
-                <h3 className="text-2xl font-bold tracking-tight">
-                  No products yet
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  The owner hasn't added any products to this store.
-                </p>
-              </div>
+            <div className="flex justify-end mb-6">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
+                    <TabsList>
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="best-sellers">Best Sellers</TabsTrigger>
+                        <TabsTrigger value="new-arrivals">New Arrivals</TabsTrigger>
+                    </TabsList>
+                </Tabs>
             </div>
-          )}
+
+             {activeTab === 'all' ? (
+                <div className="space-y-12">
+                    {bestSellers.length > 0 && (
+                        <section>
+                            <h2 className="text-xl font-bold text-foreground mb-4">Best Sellers</h2>
+                            <ProductGrid products={bestSellers} storeId={storeId} />
+                        </section>
+                    )}
+                    {newArrivals.length > 0 && (
+                         <section>
+                            <h2 className="text-xl font-bold text-foreground mb-4">New Arrivals</h2>
+                            <ProductGrid products={newArrivals} storeId={storeId} />
+                        </section>
+                    )}
+                    {otherProducts.length > 0 && (
+                        <section>
+                             <h2 className="text-xl font-bold text-foreground mb-4">All Products</h2>
+                            <ProductGrid products={otherProducts} storeId={storeId} />
+                        </section>
+                    )}
+                     {products.length === 0 && (
+                        <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm py-20">
+                            <div className="flex flex-col items-center gap-1 text-center">
+                                <h3 className="text-2xl font-bold tracking-tight">No products yet</h3>
+                                <p className="text-sm text-muted-foreground">The owner hasn't added any products to this store.</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <ProductGrid products={filteredProducts} storeId={storeId} />
+            )}
+
+            {activeTab !== 'all' && filteredProducts.length === 0 && (
+                <div className="text-center py-10">
+                    <p className="text-muted-foreground">No products found in this category.</p>
+                </div>
+            )}
         </main>
       </div>
     </div>
   );
 }
+
+    

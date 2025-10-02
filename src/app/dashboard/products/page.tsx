@@ -27,6 +27,7 @@ interface Product extends DocumentData {
   stock: number;
   category: string;
   images: string[];
+  sellingStatus: 'none' | 'best-seller' | 'new-arrival';
 }
 
 export default function ProductsPage() {
@@ -61,6 +62,18 @@ export default function ProductsPage() {
     
   }, [user, toast]);
 
+  const getStatusLabel = (status: string | undefined) => {
+    switch (status) {
+      case 'best-seller':
+        return 'Best Seller';
+      case 'new-arrival':
+        return 'New Arrival';
+      default:
+        return 'None';
+    }
+  };
+
+
   return (
     <Card>
       <CardHeader>
@@ -83,6 +96,7 @@ export default function ProductsPage() {
               <TableHead className="w-[80px]">Image</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -91,7 +105,7 @@ export default function ProductsPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">Loading products...</TableCell>
+                <TableCell colSpan={7} className="text-center">Loading products...</TableCell>
               </TableRow>
             ) : products.length > 0 ? (
               products.map((product) => (
@@ -108,6 +122,11 @@ export default function ProductsPage() {
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>
                     {product.category ? <Badge variant="secondary">{product.category}</Badge> : 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={product.sellingStatus === 'best-seller' ? 'default' : 'outline'}>
+                        {getStatusLabel(product.sellingStatus)}
+                    </Badge>
                   </TableCell>
                   <TableCell>GHS {product.price}</TableCell>
                   <TableCell>{product.stock || 0}</TableCell>
@@ -130,7 +149,7 @@ export default function ProductsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">You haven't added any products yet.</TableCell>
+                <TableCell colSpan={7} className="text-center">You haven't added any products yet.</TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -139,3 +158,5 @@ export default function ProductsPage() {
     </Card>
   );
 }
+
+    

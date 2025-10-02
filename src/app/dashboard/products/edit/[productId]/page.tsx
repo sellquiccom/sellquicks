@@ -26,6 +26,7 @@ interface ProductData {
     description: string;
     images: string[];
     userId: string;
+    sellingStatus: string;
 }
 
 interface Category extends DocumentData {
@@ -78,7 +79,8 @@ export default function EditProductPage() {
                     category: data.category || '',
                     description: data.description || '',
                     images: data.images || [],
-                    userId: data.userId || ''
+                    userId: data.userId || '',
+                    sellingStatus: data.sellingStatus || 'none',
                 });
             } else {
                 toast({ title: "Product not found", variant: "destructive" });
@@ -102,6 +104,11 @@ export default function EditProductPage() {
   const handleCategoryChange = (value: string) => {
     if (!product) return;
     setProduct({ ...product, category: value });
+  };
+
+  const handleStatusChange = (value: string) => {
+    if (!product) return;
+    setProduct({ ...product, sellingStatus: value });
   };
 
   const handleGenerateDescription = async () => {
@@ -208,6 +215,7 @@ export default function EditProductPage() {
         category: product.category,
         description: product.description,
         images: [...product.images, ...newImageUrls],
+        sellingStatus: product.sellingStatus,
         updatedAt: new Date(),
       });
 
@@ -293,6 +301,20 @@ export default function EditProductPage() {
                 </Select>
               </div>
           </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="sellingStatus">Selling Status</Label>
+            <Select value={product.sellingStatus} onValueChange={handleStatusChange} disabled={isSaving}>
+              <SelectTrigger id="sellingStatus">
+                <SelectValue placeholder="Select a status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="best-seller">Best Seller</SelectItem>
+                <SelectItem value="new-arrival">New Arrival</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="space-y-2">
             <Label>Product Images</Label>
@@ -356,3 +378,5 @@ export default function EditProductPage() {
     </Card>
   );
 }
+
+    

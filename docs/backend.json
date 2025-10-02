@@ -85,6 +85,11 @@
             "type": "string",
             "format": "uri"
           }
+        },
+        "sellingStatus": {
+            "type": "string",
+            "description": "The selling status of the product.",
+            "enum": ["none", "best-seller", "new-arrival"]
         }
       },
       "required": [
@@ -395,3 +400,5 @@
     }
   }
 }
+
+    
