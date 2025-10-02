@@ -31,7 +31,7 @@ import {
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { format } from 'date-fns';
-import { ChevronDown, Trash2 } from 'lucide-react';
+import { ChevronDown, Trash2, Copy } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -118,6 +118,22 @@ const OrderRow = ({ order }: { order: Order }) => {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleCopyTrackingLink = () => {
+    const trackingLink = `${window.location.origin}/track/${order.id}`;
+    navigator.clipboard.writeText(trackingLink).then(() => {
+      toast({
+        title: "Link Copied!",
+        description: "The tracking link has been copied to your clipboard.",
+      });
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+      toast({
+        title: "Copy Failed",
+        variant: "destructive",
+      });
+    });
   };
 
 
@@ -257,6 +273,9 @@ const OrderRow = ({ order }: { order: Order }) => {
                       >
                         Mark as Fulfilled
                       </Button>
+                       <Button size="sm" variant="secondary" onClick={handleCopyTrackingLink} className="gap-2">
+                          <Copy className="h-3 w-3" /> Copy Link
+                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                            <Button size="sm" variant="destructive" className="ml-auto">
