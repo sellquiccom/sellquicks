@@ -1,9 +1,8 @@
-
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import { doc, getDoc, DocumentData } from 'firebase/firestore';
+import { doc, DocumentData, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -54,32 +53,36 @@ export default function TrackOrderPage() {
       return;
     }
 
-    const fetchOrderData = async () => {
-      setLoading(true);
-      try {
-        const orderRef = doc(db, 'orders', orderId);
-        const orderSnap = await getDoc(orderRef);
-        
-        if (orderSnap.exists()) {
-          const orderData = { id: orderSnap.id, ...orderSnap.data() } as OrderData;
-          setOrder(orderData);
+    setLoading(true);
+    const orderRef = doc(db, 'orders', orderId);
 
-          const sellerRef = doc(db, 'users', orderData.storeOwnerId);
-          const sellerSnap = await getDoc(sellerRef);
-           if (sellerSnap.exists()) {
-              setSeller(sellerSnap.data() as SellerData);
-           }
-        } else {
-          setOrder(null);
+    const unsubscribe = onSnapshot(orderRef, (orderSnap) => {
+      if (orderSnap.exists()) {
+        const orderData = { id: orderSnap.id, ...orderSnap.data() } as OrderData;
+        setOrder(orderData);
+
+        // Fetch seller data once when order data is first loaded
+        if (!seller) {
+            const sellerRef = doc(db, 'users', orderData.storeOwnerId);
+            onSnapshot(sellerRef, (sellerSnap) => {
+                 if (sellerSnap.exists()) {
+                    setSeller(sellerSnap.data() as SellerData);
+                 }
+            });
         }
-      } catch (error) {
-        console.error("Error fetching order:", error);
-      } finally {
-        setLoading(false);
+
+      } else {
+        setOrder(null);
       }
-    };
-    fetchOrderData();
-  }, [orderId]);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching order:", error);
+      setOrder(null);
+      setLoading(false);
+    });
+    
+    return () => unsubscribe();
+  }, [orderId, seller]);
 
   const currentStatusIndex = useMemo(() => {
     if (!order) return -1;
