@@ -57,13 +57,28 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && user?.displayName) {
-      // In a real production app, you might have a different base URL
-      const baseUrl = window.location.origin;
-      setStoreUrl(`${baseUrl}/store/${user.displayName}`);
+      const protocol = window.location.protocol;
+      const host = window.location.host; // This includes hostname and port
+      let url;
+
+      if (process.env.NODE_ENV === 'production') {
+        // In production, you would construct the subdomain URL
+        // This requires your domain to be set up.
+        // E.g. `https://<displayName>.sellquic.com`
+        // For this example, we'll stick to the path-based URL
+        // but this is where you'd differentiate.
+         url = `${protocol}//${user.displayName}.sellquic.com`;
+
+      } else {
+        // In development, use the path-based structure
+        url = `${protocol}//${host}/store/${user.displayName}`;
+      }
+      setStoreUrl(url);
     }
   }, [user]);
 
   const copyToClipboard = () => {
+    if (!storeUrl) return;
     navigator.clipboard.writeText(storeUrl).then(() => {
       toast({
         title: "Copied to Clipboard!",
@@ -151,7 +166,7 @@ export default function Dashboard() {
                 <Input
                   type="text"
                   readOnly
-                  value={storeUrl}
+                  value={storeUrl || 'Loading your store link...'}
                   className="pl-10"
                   aria-label="Store URL"
                 />
@@ -258,3 +273,5 @@ export default function Dashboard() {
     </>
   );
 }
+
+    
