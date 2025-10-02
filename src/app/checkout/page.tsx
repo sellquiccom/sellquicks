@@ -1,11 +1,12 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, writeBatch, doc, getDocs, query, where } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { Separator } from '@/components/ui/separator';
 
 export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
@@ -24,7 +26,26 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [primaryColor, setPrimaryColor] = useState<string | undefined>();
+  const shippingCost = 10.00;
 
+  useEffect(() => {
+    const fetchStoreColor = async () => {
+      if (cart.length > 0) {
+        const storeId = cart[0].storeId;
+        if (storeId) {
+          const q = query(collection(db, 'users'), where('storeId', '==', storeId));
+          const querySnapshot = await getDocs(q);
+          if (!querySnapshot.empty) {
+            const storeData = querySnapshot.docs[0].data();
+            setPrimaryColor(storeData.primaryColor);
+          }
+        }
+      }
+    };
+    fetchStoreColor();
+  }, [cart]);
+  
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) {
@@ -35,7 +56,6 @@ export default function CheckoutPage() {
       return;
     }
     
-    // Group items by store owner
     const ordersByStore: { [key: string]: typeof cart } = cart.reduce((acc, item) => {
       const storeOwnerId = item.userId; 
       if (!acc[storeOwnerId]) {
@@ -72,7 +92,7 @@ export default function CheckoutPage() {
                 productName: item.name,
                 quantity: item.quantity,
                 price: item.price,
-                image: item.images[0] || null,
+                image: item.images && item.images.length > 0 ? item.images[0] : null,
             })),
             createdAt: serverTimestamp(),
         });
@@ -105,80 +125,88 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold tracking-tight mb-8">Checkout</h1>
+    <div className="bg-gray-50 min-h-screen" style={primaryColor ? { '--primary-dynamic': primaryColor } as React.CSSProperties : {}}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="mb-8 text-center">
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Checkout</h1>
+            </div>
 
-      <form onSubmit={handlePlaceOrder} className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-        <Card>
-          <CardHeader>
-            <CardTitle>Shipping Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">Delivery Address</Label>
-              <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required />
-            </div>
-          </CardContent>
-        </Card>
+            <div className="max-w-4xl mx-auto">
+                <form onSubmit={handlePlaceOrder} className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+                    <Card>
+                    <CardHeader>
+                        <CardTitle>Shipping Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                        <Label htmlFor="name">Full Name</Label>
+                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+                        </div>
+                        <div className="space-y-2">
+                        <Label htmlFor="email">Email Address</Label>
+                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                        </div>
+                        <div className="space-y-2">
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+                        </div>
+                        <div className="space-y-2">
+                        <Label htmlFor="address">Delivery Address</Label>
+                        <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} required />
+                        </div>
+                    </CardContent>
+                    </Card>
 
-        <div className="space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Your Order</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {cart.map(item => (
-                        <div key={item.id} className="flex items-center justify-between">
-                            <div className='flex items-center gap-4'>
-                                <Image 
-                                    src={item.images[0]} 
-                                    alt={item.name} 
-                                    width={64} height={64} 
-                                    className='rounded-md object-cover'
-                                />
-                                <div>
-                                    <p className="font-medium">{item.name}</p>
-                                    <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                    <div className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Your Order</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4 text-sm">
+                                {cart.map(item => (
+                                    <div key={item.id} className="flex items-center justify-between">
+                                        <div className='flex items-center gap-4'>
+                                            <Image 
+                                                src={item.images && item.images.length > 0 ? item.images[0] : 'https://picsum.photos/seed/placeholder/64'} 
+                                                alt={item.name} 
+                                                width={64} height={64} 
+                                                className='rounded-md object-cover'
+                                            />
+                                            <div>
+                                                <p className="font-medium">{item.name}</p>
+                                                <p className="text-muted-foreground">Qty: {item.quantity}</p>
+                                            </div>
+                                        </div>
+                                        <p className="font-semibold">GHS {(item.price * item.quantity).toFixed(2)}</p>
+                                    </div>
+                                ))}
+                                <Separator />
+                                <div className="space-y-2">
+                                    <div className="flex justify-between">
+                                        <span className='text-muted-foreground'>Subtotal</span>
+                                        <span className="font-semibold">GHS {totalPrice.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className='text-muted-foreground'>Shipping</span>
+                                        <span className="font-semibold">GHS {shippingCost.toFixed(2)}</span>
+                                    </div>
+                                    <Separator />
+                                    <div className="flex justify-between font-bold text-lg">
+                                        <span>Total</span>
+                                        <span>GHS {(totalPrice + shippingCost).toFixed(2)}</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <p className="font-semibold">GHS {(item.price * item.quantity).toFixed(2)}</p>
-                        </div>
-                    ))}
-                    <div className="border-t pt-4 space-y-2">
-                         <div className="flex justify-between">
-                            <span>Subtotal</span>
-                            <span className="font-semibold">GHS {totalPrice.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>Shipping</span>
-                            <span className="font-semibold">GHS 10.00</span>
-                        </div>
-                        <div className="flex justify-between font-bold text-lg">
-                            <span>Total</span>
-                            <span>GHS {(totalPrice + 10).toFixed(2)}</span>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+                            </CardContent>
+                        </Card>
 
-            <Button type="submit" size="lg" className="w-full" disabled={isPlacingOrder || cart.length === 0}>
-                {isPlacingOrder ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {isPlacingOrder ? 'Placing Order...' : 'Place Order'}
-            </Button>
+                        <Button type="submit" size="lg" className="w-full bg-[var(--primary-dynamic,hsl(var(--primary)))] hover:bg-[var(--primary-dynamic,hsl(var(--primary)))]/90" disabled={isPlacingOrder || cart.length === 0}>
+                            {isPlacingOrder ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            {isPlacingOrder ? 'Placing Order...' : 'Place Order'}
+                        </Button>
+                    </div>
+                </form>
+            </div>
         </div>
-      </form>
     </div>
   );
 }

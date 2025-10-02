@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart';
@@ -10,13 +11,33 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Trash2, ShoppingCart, ArrowLeft } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, totalItems, totalPrice } = useCart();
+  const [primaryColor, setPrimaryColor] = useState<string | undefined>();
   const shippingCost = 10.00;
 
+  useEffect(() => {
+    const fetchStoreColor = async () => {
+      if (cart.length > 0) {
+        const storeId = cart[0].storeId;
+        if (storeId) {
+          const q = query(collection(db, 'users'), where('storeId', '==', storeId));
+          const querySnapshot = await getDocs(q);
+          if (!querySnapshot.empty) {
+            const storeData = querySnapshot.docs[0].data();
+            setPrimaryColor(storeData.primaryColor);
+          }
+        }
+      }
+    };
+    fetchStoreColor();
+  }, [cart]);
+
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen" style={primaryColor ? { '--primary-dynamic': primaryColor } as React.CSSProperties : {}}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Your Shopping Cart</h1>
@@ -121,7 +142,7 @@ export default function CartPage() {
                       </div>
                   </CardContent>
                   <CardFooter>
-                      <Button asChild size="lg" className="w-full">
+                      <Button asChild size="lg" className="w-full bg-[var(--primary-dynamic,hsl(var(--primary)))] hover:bg-[var(--primary-dynamic,hsl(var(--primary)))]/90">
                           <Link href="/checkout">Proceed to Checkout</Link>
                       </Button>
                   </CardFooter>
