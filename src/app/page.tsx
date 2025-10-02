@@ -33,6 +33,37 @@ function ChevronDownIcon(props: React.SVGProps<SVGSVGElement>) {
   )
 }
 
+const steps = [
+    {
+        title: "Pick a platform.",
+        description: "Sign up for a secure and reliable free storefront with SellQuic."
+    },
+    {
+        title: "Plan out your store.",
+        description: "Map out your goals, product collections, and who your audience is."
+    },
+    {
+        title: "Start creating.",
+        description: "Use our intuitive tools or AI website builder to get started in minutes."
+    },
+    {
+        title: "Customize your website.",
+        description: "Use the drag and drop editor and tailor your site to fit your brand."
+    },
+    {
+        title: "Optimize for search engines.",
+        description: "Increase your site's visibility with a suite of built-in SEO tools."
+    },
+    {
+        title: "Publish your website.",
+        description: "Register and connect a custom domain name and go live."
+    },
+    {
+        title: "Promote and drive traffic.",
+        description: "Use built-in marketing tools to grow and expand your reach."
+    }
+];
+
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
@@ -124,12 +155,24 @@ export default function Home() {
                   </li>
                   <li>
                     <div className="grid gap-1">
-                       <h3 className="text-xl font-bold text-accent-foreground ml-7">Built-in AI tools</h3>
+                       <div className="flex items-center gap-2">
+                        <ArrowRight className="h-5 w-5 text-primary" />
+                        <h3 className="text-xl font-bold text-accent-foreground">Built-in AI tools</h3>
+                       </div>
+                       <p className="text-muted-foreground">
+                        Generate product descriptions, suggest designs, and optimize your store with AI.
+                      </p>
                     </div>
                   </li>
                   <li>
                     <div className="grid gap-1">
-                       <h3 className="text-xl font-bold text-accent-foreground ml-7">Advanced design features</h3>
+                       <div className="flex items-center gap-2">
+                        <ArrowRight className="h-5 w-5 text-primary" />
+                        <h3 className="text-xl font-bold text-accent-foreground">Advanced design features</h3>
+                       </div>
+                       <p className="text-muted-foreground">
+                        Fine-tune every detail with custom fonts, colors, and layouts.
+                       </p>
                     </div>
                   </li>
                 </ul>
@@ -256,6 +299,39 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
+          <div className="container grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-12">
+            <div className="space-y-4">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
+                How to create a website for free
+              </h2>
+              <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                Follow these 7 simple steps to create a website today.
+              </p>
+              <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                <Button size="lg" asChild>
+                  <Link href="/signup">Get Started</Link>
+                </Button>
+                <Button size="lg" variant="ghost" asChild>
+                  <Link href="#">Learn more <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                </Button>
+              </div>
+            </div>
+            <div className="flex flex-col gap-4">
+              {steps.map((step, index) => (
+                <div key={index} className="border-b pb-4">
+                    <div className="flex items-baseline gap-4">
+                        <span className="text-lg font-bold text-muted-foreground">{index + 1}.</span>
+                        <div>
+                            <h3 className="text-lg font-semibold">{step.title}</h3>
+                            <p className="text-sm text-muted-foreground">{step.description}</p>
+                        </div>
+                    </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-gray-800 z-10 bg-black text-white">
