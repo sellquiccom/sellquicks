@@ -114,7 +114,7 @@ const InternationalSection = () => {
                             >
                                 <div className={cn("w-[280px] mx-auto bg-white/90 backdrop-blur-sm text-black rounded-xl shadow-2xl p-4 transition-transform duration-500", country.code === activeCountry.code && "scale-105")}>
                                     <div className="relative aspect-[3/4] rounded-lg overflow-hidden mb-3">
-                                        <Image src="https://picsum.photos/seed/fashion-woman/300/400" alt="Model" layout="fill" className="object-cover" data-ai-hint="fashion woman" />
+                                        <Image src="https://picsum.photos/seed/fashion-woman/300/400" alt="Model" fill className="object-cover" data-ai-hint="fashion woman" />
                                     </div>
                                     <div className="flex justify-between items-center mb-3">
                                         <div className="flex items-center gap-2 bg-gray-200 rounded-full pl-1 pr-3 py-1 text-sm">
