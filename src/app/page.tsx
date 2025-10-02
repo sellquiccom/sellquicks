@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -73,16 +74,16 @@ const InternationalSection = () => {
     const [activeCountry, setActiveCountry] = useState(countries[2]);
 
     return (
-        <section className="w-full bg-gray-950 text-white py-24 sm:py-32">
+        <section className="w-full bg-white text-gray-900 py-24 sm:py-32">
             <div className="container mx-auto px-4 md:px-6">
                 <div className="text-center max-w-3xl mx-auto mb-16">
                     <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Sell anywhere</h2>
-                    <p className="mt-4 text-gray-400 md:text-xl">
+                    <p className="mt-4 text-gray-600 md:text-xl">
                         Reach customers around the world with localized shopping experiences and seamless international shipping.
                     </p>
                 </div>
                 <div 
-                    className="relative flex flex-col min-h-[580px] md:min-h-[480px] bg-grid-glow rounded-2xl border border-white/10 p-8 md:flex-row md:items-center md:justify-center"
+                    className="relative flex flex-col min-h-[580px] md:min-h-[480px] bg-gray-100 rounded-2xl border border-gray-200 p-8 md:flex-row md:items-center md:justify-center"
                 >
                     <div className="w-full flex-wrap justify-center items-center gap-3 mb-8 flex md:absolute md:left-8 md:top-1/2 md:-translate-y-1/2 md:flex-col md:w-auto md:mb-0">
                         {countries.map(country => (
