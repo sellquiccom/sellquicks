@@ -9,14 +9,12 @@ import { collection, query, where, onSnapshot, DocumentData, Timestamp, doc, upd
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { format } from 'date-fns';
-import { MoreHorizontal } from 'lucide-react';
+import { ChevronDown, MoreHorizontal } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +24,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
+
 
 type OrderStatus = 'pending' | 'confirmed' | 'fulfilled';
 
@@ -53,44 +53,9 @@ interface Order extends DocumentData {
   createdAt: Timestamp;
 }
 
-export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+const OrderRow = ({ order }: { order: Order }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    const q = query(collection(db, 'orders'), where('storeOwnerId', '==', user.uid));
-    
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const ordersData = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          createdAt: data.createdAt,
-        } as Order;
-      });
-      ordersData.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
-      setOrders(ordersData);
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching orders in real-time: ", error);
-      toast({
-        title: 'Error',
-        description: 'Could not fetch orders. Please try again later.',
-        variant: 'destructive',
-      });
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [user, toast]);
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     const orderRef = doc(db, 'orders', orderId);
@@ -135,6 +100,128 @@ export default function OrdersPage() {
   }
 
   return (
+    <Collapsible asChild open={isOpen} onOpenChange={setIsOpen}>
+      <>
+        <CollapsibleTrigger asChild>
+            <TableRow className="cursor-pointer">
+                <TableCell className="font-medium">{order.customerInfo?.name || 'N/A'}</TableCell>
+                <TableCell>{getItemSummary(order.items)}</TableCell>
+                <TableCell>{order.createdAt ? format(order.createdAt.toDate(), 'PPp') : 'N/A'}</TableCell>
+                <TableCell>
+                    <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
+                </TableCell>
+                <TableCell className="text-right">GHS {typeof order.totalAmount === 'number' ? order.totalAmount.toFixed(2) : '0.00'}</TableCell>
+                <TableCell className="text-right w-[120px]">
+                    <div className='flex items-center justify-end gap-2'>
+                        <span className='text-xs text-muted-foreground'>{isOpen ? 'Hide' : 'View'}</span>
+                        <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+                    </div>
+                </TableCell>
+            </TableRow>
+        </CollapsibleTrigger>
+        <CollapsibleContent asChild>
+            <tr className='bg-muted/50'>
+                <TableCell colSpan={6}>
+                    <div className="grid gap-4 py-4 px-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h3 className="font-semibold mb-2">Customer Information</h3>
+                                <div className="text-sm space-y-1">
+                                    <p><span className="font-medium">Name:</span> {order.customerInfo?.name}</p>
+                                    <p><span className="font-medium">Email:</span> {order.customerInfo?.email}</p>
+                                    <p><span className="font-medium">Phone:</span> {order.customerInfo?.phone}</p>
+                                    <p><span className="font-medium">Address:</span> {order.customerInfo?.address}</p>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="font-semibold mb-2">Order Summary & Actions</h3>
+                                <div className="text-sm space-y-2">
+                                    <p><span className="font-medium">Order ID:</span> {order.id}</p>
+                                    <p><span className="font-medium">Status:</span> <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge></p>
+                                    <p><span className="font-medium">Total:</span> GHS {typeof order.totalAmount === 'number' ? order.totalAmount.toFixed(2) : '0.00'}</p>
+                                </div>
+                                <div className='mt-3 space-x-2'>
+                                    <Button size="sm" variant="outline" disabled={order.status === 'confirmed'} onClick={() => handleStatusChange(order.id, 'confirmed')}>
+                                        Mark as Confirmed
+                                    </Button>
+                                    <Button size="sm" variant="outline" disabled={order.status === 'fulfilled'} onClick={() => handleStatusChange(order.id, 'fulfilled')}>
+                                        Mark as Fulfilled
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="font-semibold mb-2">Items Ordered</h3>
+                            <div className="space-y-2">
+                                {order.items && order.items.map((item) => (
+                                    <div key={item.productId} className="flex items-center gap-4 p-2 border rounded-md bg-background">
+                                        <Image
+                                            src={item.image || 'https://placehold.co/100x100'}
+                                            alt={item.productName}
+                                            width={60}
+                                            height={60}
+                                            className="rounded-md object-cover"
+                                        />
+                                        <div className="flex-1">
+                                            <p className="font-medium">{item.productName}</p>
+                                            <p className="text-sm text-muted-foreground">Qty: {item.quantity} @ GHS {item.price.toFixed(2)}</p>
+                                        </div>
+                                        <p className="font-semibold">GHS {(item.price * item.quantity).toFixed(2)}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </TableCell>
+            </tr>
+        </CollapsibleContent>
+       </>
+    </Collapsible>
+  )
+}
+
+
+export default function OrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const q = query(collection(db, 'orders'), where('storeOwnerId', '==', user.uid));
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const ordersData = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt,
+        } as Order;
+      });
+      ordersData.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+      setOrders(ordersData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching orders in real-time: ", error);
+      toast({
+        title: 'Error',
+        description: 'Could not fetch orders. Please try again later.',
+        variant: 'destructive',
+      });
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, toast]);
+
+  return (
     <Card>
       <CardHeader>
         <CardTitle>Orders</CardTitle>
@@ -149,7 +236,7 @@ export default function OrdersPage() {
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="w-[100px] text-right">Actions</TableHead>
+              <TableHead className="w-[120px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -159,89 +246,7 @@ export default function OrdersPage() {
               </TableRow>
             ) : orders.length > 0 ? (
               orders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.customerInfo?.name || 'N/A'}</TableCell>
-                  <TableCell>{getItemSummary(order.items)}</TableCell>
-                  <TableCell>{order.createdAt ? format(order.createdAt.toDate(), 'PPp') : 'N/A'}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">GHS {typeof order.totalAmount === 'number' ? order.totalAmount.toFixed(2) : '0.00'}</TableCell>
-                  <TableCell className="text-right">
-                    <Dialog>
-                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Order actions</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                           <DialogTrigger asChild>
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                          </DialogTrigger>
-                          <DropdownMenuItem disabled={order.status === 'confirmed'} onClick={() => handleStatusChange(order.id, 'confirmed')}>
-                            Mark as Confirmed
-                          </DropdownMenuItem>
-                          <DropdownMenuItem disabled={order.status === 'fulfilled'} onClick={() => handleStatusChange(order.id, 'fulfilled')}>
-                            Mark as Fulfilled
-                          </DropdownMenuItem>
-                           <DropdownMenuItem disabled={order.status === 'pending'} onClick={() => handleStatusChange(order.id, 'pending')}>
-                            Mark as Pending
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                       <DialogContent className="sm:max-w-[600px]">
-                        <DialogHeader>
-                            <DialogTitle>Order Details</DialogTitle>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <h3 className="font-semibold mb-2">Customer Information</h3>
-                                    <div className="text-sm space-y-1">
-                                        <p><span className="font-medium">Name:</span> {order.customerInfo?.name}</p>
-                                        <p><span className="font-medium">Email:</span> {order.customerInfo?.email}</p>
-                                        <p><span className="font-medium">Phone:</span> {order.customerInfo?.phone}</p>
-                                        <p><span className="font-medium">Address:</span> {order.customerInfo?.address}</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold mb-2">Order Summary</h3>
-                                    <div className="text-sm space-y-1">
-                                        <p><span className="font-medium">Order ID:</span> {order.id}</p>
-                                        <p><span className="font-medium">Status:</span> <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge></p>
-                                        <p><span className="font-medium">Total:</span> GHS {typeof order.totalAmount === 'number' ? order.totalAmount.toFixed(2) : '0.00'}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 className="font-semibold mb-2">Items Ordered</h3>
-                                <div className="space-y-2">
-                                    {order.items && order.items.map((item) => (
-                                        <div key={item.productId} className="flex items-center gap-4 p-2 border rounded-md">
-                                            <Image
-                                                src={item.image || 'https://placehold.co/100x100'}
-                                                alt={item.productName}
-                                                width={60}
-                                                height={60}
-                                                className="rounded-md object-cover"
-                                            />
-                                            <div className="flex-1">
-                                                <p className="font-medium">{item.productName}</p>
-                                                <p className="text-sm text-muted-foreground">Qty: {item.quantity} @ GHS {item.price.toFixed(2)}</p>
-                                            </div>
-                                            <p className="font-semibold">GHS {(item.price * item.quantity).toFixed(2)}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
-                </TableRow>
+                <OrderRow key={order.id} order={order} />
               ))
             ) : (
               <TableRow>
