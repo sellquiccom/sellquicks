@@ -13,7 +13,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { DollarSign, Users, CreditCard, Activity } from 'lucide-react';
+import { DollarSign, Users, CreditCard, Activity, Package } from 'lucide-react';
 import { AreaChart, Area, CartesianGrid, XAxis, Tooltip } from 'recharts';
 import { collection, onSnapshot, Timestamp, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -31,6 +31,10 @@ interface Seller extends DocumentData {
     createdAt: Timestamp;
 }
 
+interface Product extends DocumentData {
+  id: string;
+}
+
 const chartConfig = {
   revenue: {
     label: 'Revenue',
@@ -46,6 +50,7 @@ const chartConfig = {
 export default function SuperAdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [vendors, setVendors] = useState<Seller[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -60,9 +65,16 @@ export default function SuperAdminDashboard() {
       setVendors(fetchedVendors);
     });
 
+    const unsubProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
+        const fetchedProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        setProducts(fetchedProducts);
+    });
+
+
     return () => {
       unsubOrders();
       unsubVendors();
+      unsubProducts();
     };
   }, []);
 
@@ -70,6 +82,7 @@ export default function SuperAdminDashboard() {
     totalRevenue,
     totalSales,
     totalVendors,
+    totalProducts,
     avgOrderValue,
     revenueChartData,
     vendorsChartData,
@@ -80,6 +93,7 @@ export default function SuperAdminDashboard() {
     const totalSales = confirmedOrders.length;
     const avgOrderValue = totalSales > 0 ? totalRevenue / totalSales : 0;
     const totalVendors = vendors.length;
+    const totalProducts = products.length;
 
     // Chart data for last 30 days
     const last30Days = Array.from({ length: 30 }, (_, i) => {
@@ -110,8 +124,8 @@ export default function SuperAdminDashboard() {
     }));
 
 
-    return { totalRevenue, totalSales, totalVendors, avgOrderValue, revenueChartData, vendorsChartData };
-  }, [orders, vendors]);
+    return { totalRevenue, totalSales, totalVendors, totalProducts, avgOrderValue, revenueChartData, vendorsChartData };
+  }, [orders, vendors, products]);
   
   if (loading) {
     return <p>Loading platform analytics...</p>;
@@ -137,7 +151,7 @@ export default function SuperAdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+{totalSales}</div>
-            <p className="text-xs text-muted-foreground">Total orders fulfilled</p>
+            <p className="text-xs text-muted-foreground">Total orders placed</p>
           </CardContent>
         </Card>
          <Card>
@@ -152,12 +166,12 @@ export default function SuperAdminDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Order Value</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">GHS {avgOrderValue.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">Platform average</p>
+            <div className="text-2xl font-bold">{totalProducts}</div>
+            <p className="text-xs text-muted-foreground">Across all stores</p>
           </CardContent>
         </Card>
       </div>
@@ -233,5 +247,3 @@ export default function SuperAdminDashboard() {
     </div>
   );
 }
-
-    

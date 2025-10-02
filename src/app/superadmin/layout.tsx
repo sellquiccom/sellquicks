@@ -99,8 +99,6 @@ export default function SuperAdminLayout({
           <p className="px-3 pb-2 text-xs text-gray-500">PLATFORM</p>
           <NavLink href="/superadmin" icon={Home}>Dashboard</NavLink>
           <NavLink href="/superadmin/vendors" icon={Users}>Vendors</NavLink>
-          <NavLink href="/superadmin/orders" icon={ShoppingCart}>All Orders</NavLink>
-          <NavLink href="/superadmin/products" icon={Package}>All Products</NavLink>
           <NavLink href="/superadmin/settings" icon={Settings}>Platform Settings</NavLink>
         </nav>
       </div>
