@@ -169,7 +169,7 @@ export default function ProductDetailPage() {
                 <CardContent className="p-4 space-y-3 text-sm">
                     <div className="flex items-center gap-2">
                        <Badge variant="secondary">Category</Badge>
-                       <span className="text-muted-foreground">Sneakers</span>
+                       <span className="text-muted-foreground">{product.category || 'N/A'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                        <Badge variant="secondary">Stock</Badge>

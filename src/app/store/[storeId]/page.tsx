@@ -17,6 +17,7 @@ export interface Product extends DocumentData {
   price: number;
   images: string[];
   description: string;
+  category: string;
   userId: string;
 }
 
