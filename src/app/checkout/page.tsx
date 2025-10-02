@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp, writeBatch, doc, getDocs, query, where, DocumentData, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, writeBatch, doc, getDocs, query, where, DocumentData, onSnapshot, getDoc } from 'firebase/firestore';
 import { generateOrderCode } from '@/lib/order-code';
 
 import { Button } from '@/components/ui/button';
@@ -252,5 +252,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-    
