@@ -2,12 +2,13 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDWH9xun1AvzZFWQOH1GqM2t1VyzRz75FE",
   authDomain: "sellquic.firebaseapp.com",
   projectId: "sellquic",
-  storageBucket: "sellquic.firebasestorage.app",
+  storageBucket: "sellquic.appspot.com",
   messagingSenderId: "162539089525",
   appId: "1:162539089525:web:5b6566781d6e5a97c7123c"
 };
@@ -15,5 +16,6 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-export { app, auth, db };
+export { app, auth, db, storage };

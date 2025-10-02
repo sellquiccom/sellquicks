@@ -1,70 +1,99 @@
 /**
- * @fileOverview Firestore Security Rules for the application.
+ * @description This ruleset enforces a strict user-ownership model for seller profiles and a store-ownership model for products and orders.
+ * All write operations are restricted to authenticated users. Data structure:
+ * - /users/{userId}: Stores seller profiles, with the document ID matching the user's UID.
+ * - /products/{productId}: Stores product data.
+ * - /orders/{orderId}: Stores order data.
  *
- * Core Philosophy:
- * This ruleset prioritizes rapid prototyping by granting broad access.
- * This is NOT a production-ready ruleset. It should be refined iteratively
- * as the application evolves.
+ * @keySecurityDecisions
+ * - Users can only read and write their own profile data.
+ * - Products and orders are accessible with authentication.
  *
- * Data Structure:
- * - /users/{userId}: Stores seller profile information, with `userId` matching the authenticated user's UID.
- * - /products/{productId}: Stores all products for all stores.
- * - /orders/{orderId}: Stores all orders for all stores.
- *
- * Key Security Decisions:
- * - All read and write operations are currently allowed. This is intended for
- *   development purposes only and should be tightened as the application matures.
- *
- * Denormalization for Authorization:
- * - No denormalization is currently implemented due to the broad access policy.
- *
- * Structural Segregation:
- * - No structural segregation is implemented due to the broad access policy.
+ * @denormalizationForAuthorization
+ * - For the /products/{productId} collection, it is essential that each product document contains a `storeId` field
+ *   that links it to the store that owns it. This enables the rules to quickly verify that the seller creating, updating, or
+ *   deleting a product is indeed the owner of the associated store. The `storeId` field MUST match a Store document's `id` field.
+ * - Similarly, for the /orders/{orderId} collection, each order document must contain a `storeId` field that links it
+ *   to the store that is responsible for the order. This allows the rules to authorize access to orders based on store ownership.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows all operations on user documents.
+     * @description Protects user profiles, ensuring users can only access their own data.
      * @path /users/{userId}
-     * @allow (create) - Any authenticated user can create a user document.
-     * @allow (get) - Any user can read a user document.
-     * @allow (update) - Any user can update a user document.
-     * @allow (delete) - Any user can delete a user document.
-     * @principle Allows all operations for rapid prototyping.
+     * @allow (create) User with UID 'user_abc' can create a profile at /users/user_abc.
+     * @deny (create) User with UID 'user_xyz' cannot create a profile at /users/user_abc.
+     * @allow (get) User with UID 'user_abc' can read their profile at /users/user_abc.
+     * @deny (get) User with UID 'user_xyz' cannot read the profile at /users/user_abc.
+     * @allow (update) User with UID 'user_abc' can update their profile at /users/user_abc.
+     * @deny (update) User with UID 'user_xyz' cannot update the profile at /users/user_abc.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      allow get, list: if true;
-      allow create, update, delete: if true;
+      // Check if the user is signed in.
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      // Only allow creation if the user is signed in and the userId matches the authenticated user's ID.
+      allow create: if isSignedIn() && isOwner(userId);
+      // Only allow update if the user is signed in and the userId matches the authenticated user's ID.
+      allow update: if isSignedIn() && isExistingOwner(userId);
+      // Only allow deletion if the user is signed in and the userId matches the authenticated user's ID.
+      allow delete: if isSignedIn() && isExistingOwner(userId);
     }
 
     /**
-     * @description Allows all operations on product documents.
+     * @description Manages products, ensuring only authenticated users can access product information.
      * @path /products/{productId}
-     * @allow (create) - Any authenticated user can create a product document.
-     * @allow (get) - Any user can read a product document.
-     * @allow (update) - Any user can update a product document.
-     * @allow (delete) - Any user can delete a product document.
-     * @principle Allows all operations for rapid prototyping.
+     * @allow (get) Any authenticated user can read a product.
+     * @deny (create) An unauthenticated user cannot create a product.
+     * @allow (create) An authenticated user can create a product.
+     * @deny (update) An unauthenticated user cannot update a product.
+     * @allow (update) An authenticated user can update a product they own.
+     * @deny (delete) An unauthenticated user cannot delete a product.
+     * @allow (delete) An authenticated user can delete a product they own.
+     * @principle Authenticated access with ownership checks.
      */
     match /products/{productId} {
-      allow get, list: if true;
-      allow create, update, delete: if true;
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
-     * @description Allows all operations on order documents.
+     * @description Manages orders, ensuring only authenticated users can access order information.
      * @path /orders/{orderId}
-     * @allow (create) - Any authenticated user can create an order document.
-     * @allow (get) - Any user can read an order document.
-     * @allow (update) - Any user can update an order document.
-     * @allow (delete) - Any user can delete an order document.
-     * @principle Allows all operations for rapid prototyping.
+     * @allow (get) Any authenticated user can read an order.
+     * @deny (create) An unauthenticated user cannot create an order.
+     * @allow (create) An authenticated user can create an order.
+     * @deny (update) An unauthenticated user cannot update an order.
+     * @allow (update) An authenticated user can update an order they own.
+     * @deny (delete) An unauthenticated user cannot delete an order.
+     * @allow (delete) An authenticated user can delete an order they own.
+     * @principle Authenticated access with ownership checks.
      */
     match /orders/{orderId} {
-      allow get, list: if true;
-      allow create, update, delete: if true;
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
+  }
+
+  // Helper function to determine if the user is signed in.
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  // Helper function to determine if the user is the owner of the resource.
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
+
+  // Helper function to determine if the user is the existing owner of the resource.
+  function isExistingOwner(userId) {
+    return isOwner(userId) && resource != null;
   }
 }

@@ -1,15 +1,13 @@
 
 'use client';
 
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Clock, Plus } from 'lucide-react';
+import { ArrowRight, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { getStoreIdentifier } from '@/lib/store';
 import { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, DocumentData, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, DocumentData, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -22,11 +20,18 @@ interface Product extends DocumentData {
   userId: string;
 }
 
-const ProductCard = ({ product, storeId }: { product: Product; storeId: string | null }) => {
+interface StoreData extends DocumentData {
+    businessName?: string;
+    bannerUrl?: string;
+    logoUrl?: string;
+    uid?: string;
+}
+
+const ProductCard = ({ product, storeId, storeOwnerId }: { product: Product; storeId: string | null; storeOwnerId: string | null }) => {
   const { toast } = useToast();
 
   const handleCreateOrder = async () => {
-    if (!storeId || !product.userId) {
+    if (!storeId || !storeOwnerId) {
       toast({
         title: 'Error',
         description: 'Store information is missing.',
@@ -39,7 +44,7 @@ const ProductCard = ({ product, storeId }: { product: Product; storeId: string |
         productId: product.id,
         productName: product.name,
         productPrice: product.price,
-        storeOwnerId: product.userId,
+        storeOwnerId: storeOwnerId,
         storeId: storeId,
         status: 'pending',
         customerInfo: { // Placeholder for customer details
@@ -88,8 +93,7 @@ const ProductCard = ({ product, storeId }: { product: Product; storeId: string |
 
 export default function StorePage({ params }: { params: { storeId: string } }) {
   const [storeId, setStoreId] = useState<string | null>(null);
-  const [storeName, setStoreName] = useState<string | null>(null);
-  const [storeOwnerId, setStoreOwnerId] = useState<string | null>(null);
+  const [storeData, setStoreData] = useState<StoreData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -105,41 +109,22 @@ export default function StorePage({ params }: { params: { storeId: string } }) {
     const fetchStoreData = async () => {
       setLoading(true);
       try {
-        // In a real app, you'd fetch store details from a 'stores' collection
-        // For now, we derive what we can and query products by a user ID
-        // which we will get from the first product we find.
-        
-        const productsQuery = query(collection(db, 'products'), where('storeId', '==', storeId));
-        const productsSnapshot = await getDocs(productsQuery);
-        
-        if (productsSnapshot.empty) {
-          // A better approach would be to have a 'users' collection keyed by storeId
-          // to find the user and then their products.
-          // For now, we'll try to find any user that might match this storeId as a business name
-          // This is a fallback and not ideal for production.
-          const usersQuery = query(collection(db, 'users'), where('businessName', '==', storeId));
-          const usersSnapshot = await getDocs(usersQuery);
+        const usersQuery = query(collection(db, 'users'), where('storeId', '==', storeId));
+        const usersSnapshot = await getDocs(usersQuery);
 
-          if (!usersSnapshot.empty) {
-            const storeUser = usersSnapshot.docs[0];
-            setStoreName(storeUser.data().businessName);
-            setStoreOwnerId(storeUser.id);
-            
-            const userProductsQuery = query(collection(db, 'products'), where('userId', '==', storeUser.id));
-            const userProductsSnapshot = await getDocs(userProductsQuery);
-            const productsData = userProductsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-            setProducts(productsData);
-          } else {
-             setStoreName(storeId); // Fallback to storeId as name if no user found
-          }
-        } else {
-          const productsData = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        if (!usersSnapshot.empty) {
+          const storeUserDoc = usersSnapshot.docs[0];
+          const storeUserData = storeUserDoc.data() as StoreData;
+          storeUserData.uid = storeUserDoc.id;
+          setStoreData(storeUserData);
+          
+          const userProductsQuery = query(collection(db, 'products'), where('userId', '==', storeUserDoc.id));
+          const userProductsSnapshot = await getDocs(userProductsQuery);
+          const productsData = userProductsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
           setProducts(productsData);
-          if (productsData.length > 0) {
-            // Assume all products in this query belong to the same user/store
-            setStoreOwnerId(productsData[0].userId);
-            setStoreName(storeId); // You'd fetch this from a 'stores' collection ideally
-          }
+
+        } else {
+           setStoreData({ businessName: storeId }); // Fallback to storeId as name if no user found
         }
       } catch (error) {
         console.error("Error fetching store data: ", error);
@@ -154,20 +139,39 @@ export default function StorePage({ params }: { params: { storeId: string } }) {
   if (loading) {
     return <div className="flex h-screen items-center justify-center">Loading store...</div>;
   }
+  
+  const storeName = storeData?.businessName || storeId;
 
   return (
     <div className="bg-gray-50 min-h-screen">
+       {storeData?.bannerUrl && (
+        <div className="relative w-full h-48 md:h-64 lg:h-80 bg-gray-200">
+            <Image
+                src={storeData.bannerUrl}
+                alt={`${storeName} banner`}
+                layout="fill"
+                className="object-cover"
+                priority
+            />
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <header className="relative bg-white p-6 rounded-lg shadow-sm mb-8">
-            <div className="absolute -top-5 -right-5">
-                <div className="w-16 h-16 bg-pink-400 rounded-full flex items-center justify-center shadow-lg">
-                    <Clock className="w-8 h-8 text-white" />
+        <header className="relative bg-white p-6 rounded-lg shadow-sm mb-8 -mt-16 md:-mt-24 z-10">
+          <div className="flex items-center gap-4">
+              {storeData?.logoUrl && (
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white shadow-md -mt-12 md:-mt-16">
+                    <Image
+                        src={storeData.logoUrl}
+                        alt={`${storeName} logo`}
+                        width={96}
+                        height={96}
+                        className="object-cover"
+                    />
                 </div>
-            </div>
-          <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold">Welcome to {storeName ? `'${storeName}'` : 'the store'}!</h1>
+              )}
+              <div className='pt-2'>
+                <h1 className="text-2xl font-bold">{storeName}</h1>
                 <p className="text-muted-foreground">The best place to find your favorite kicks.</p>
               </div>
           </div>
@@ -184,7 +188,7 @@ export default function StorePage({ params }: { params: { storeId: string } }) {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} storeId={storeId} />
+                  <ProductCard key={product.id} product={product} storeId={storeId} storeOwnerId={storeData?.uid || null} />
                 ))}
               </div>
             </section>
@@ -205,5 +209,3 @@ export default function StorePage({ params }: { params: { storeId: string } }) {
     </div>
   );
 }
-
-    
