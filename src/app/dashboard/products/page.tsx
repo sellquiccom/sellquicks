@@ -5,9 +5,9 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { collection, query, where, onSnapshot, DocumentData } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, DocumentData, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
   DropdownMenu,
@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/use-auth';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface Product extends DocumentData {
   id: string;
@@ -33,8 +34,12 @@ interface Product extends DocumentData {
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  
+  const isFreePlan = user?.subscription?.planId === 'free';
+  const productLimit = 10;
+  const limitReached = isFreePlan && products.length >= productLimit;
 
   useEffect(() => {
     if (!user) {
@@ -77,12 +82,12 @@ export default function ProductsPage() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-start">
           <div>
             <CardTitle>Products</CardTitle>
             <CardDescription>Manage your products and view their sales performance.</CardDescription>
           </div>
-          <Button asChild>
+          <Button asChild disabled={limitReached}>
             <Link href="/dashboard/products/new">
               <PlusCircle className="mr-2 h-4 w-4" /> Add Product
             </Link>
@@ -90,6 +95,19 @@ export default function ProductsPage() {
         </div>
       </CardHeader>
       <CardContent>
+        {limitReached && (
+             <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Product Limit Reached</AlertTitle>
+              <AlertDescription>
+                You have reached the {productLimit}-product limit for the Free plan. Please{' '}
+                <Link href="/dashboard/subscription" className="font-semibold underline">
+                  upgrade to Pro
+                </Link>{' '}
+                to add more products.
+              </AlertDescription>
+            </Alert>
+        )}
         <Table>
           <TableHeader>
             <TableRow>
@@ -158,5 +176,3 @@ export default function ProductsPage() {
     </Card>
   );
 }
-
-    
