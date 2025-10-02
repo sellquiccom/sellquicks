@@ -1,0 +1,469 @@
+{
+  "entities": {
+    "Store": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Store",
+      "type": "object",
+      "description": "Represents a seller's online storefront.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the store."
+        },
+        "sellerId": {
+          "type": "string",
+          "description": "Reference to the Seller who owns this store. (Relationship: Seller 1:N Store)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the store."
+        },
+        "subdomain": {
+          "type": "string",
+          "description": "The unique subdomain for the store (e.g., username.platform.com)."
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "URL of the store's logo image.",
+          "format": "uri"
+        },
+        "brandColor": {
+          "type": "string",
+          "description": "The store's primary brand color (e.g., hex code)."
+        },
+        "coverImageUrl": {
+          "type": "string",
+          "description": "URL of the store's cover image.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "sellerId",
+        "name",
+        "subdomain"
+      ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a product sold in a store.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the product."
+        },
+        "storeId": {
+          "type": "string",
+          "description": "Reference to the Store this product belongs to. (Relationship: Store 1:N Product)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "The product's description."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the product."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the product."
+        },
+        "stock": {
+          "type": "number",
+          "description": "The number of units of this product in stock."
+        }
+      },
+      "required": [
+        "id",
+        "storeId",
+        "name",
+        "description",
+        "price",
+        "category",
+        "stock"
+      ]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents an order placed by a customer.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the order."
+        },
+        "storeId": {
+          "type": "string",
+          "description": "Reference to the Store where the order was placed. (Relationship: Store 1:N Order)"
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to the Customer who placed the order. (Relationship: Customer 1:N Order)"
+        },
+        "orderDate": {
+          "type": "string",
+          "description": "The date and time when the order was placed.",
+          "format": "date-time"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "The total amount of the order."
+        },
+        "paymentProofUrl": {
+          "type": "string",
+          "description": "URL of the payment proof uploaded by the customer.",
+          "format": "uri"
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the order (e.g., pending, confirmed, fulfilled)."
+        }
+      },
+      "required": [
+        "id",
+        "storeId",
+        "customerId",
+        "orderDate",
+        "totalAmount",
+        "status"
+      ]
+    },
+    "OrderItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "OrderItem",
+      "type": "object",
+      "description": "Represents an item within an order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the order item."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Reference to the Order this item belongs to. (Relationship: Order 1:N OrderItem)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product that was ordered. (Relationship: Product 1:N OrderItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the product ordered."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the product at the time of the order."
+        }
+      },
+      "required": [
+        "id",
+        "orderId",
+        "productId",
+        "quantity",
+        "price"
+      ]
+    },
+    "SubscriptionPlan": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SubscriptionPlan",
+      "type": "object",
+      "description": "Represents a subscription plan for sellers.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the subscription plan."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the subscription plan (e.g., Free, Pro)."
+        },
+        "productLimit": {
+          "type": "number",
+          "description": "The maximum number of products allowed in this plan."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the subscription plan."
+        },
+        "enhancedAnalytics": {
+          "type": "boolean",
+          "description": "Indicates whether enhanced analytics are included in this plan."
+        },
+        "whatsappNotifications": {
+          "type": "boolean",
+          "description": "Indicates whether WhatsApp notifications are included in this plan."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "productLimit",
+        "price"
+      ]
+    },
+    "SellerSubscription": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SellerSubscription",
+      "type": "object",
+      "description": "Represents a seller's subscription to a plan.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the seller's subscription."
+        },
+        "sellerId": {
+          "type": "string",
+          "description": "Reference to the Seller who owns the subscription. (Relationship: Seller 1:N SellerSubscription)"
+        },
+        "subscriptionPlanId": {
+          "type": "string",
+          "description": "Reference to the SubscriptionPlan being used. (Relationship: SubscriptionPlan 1:N SellerSubscription)"
+        },
+        "startDate": {
+          "type": "string",
+          "description": "The date and time when the subscription started.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "The date and time when the subscription ends.",
+          "format": "date-time"
+        },
+        "paymentLink": {
+          "type": "string",
+          "description": "Link for subscription payments.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "sellerId",
+        "subscriptionPlanId",
+        "startDate",
+        "endDate"
+      ]
+    },
+    "Seller": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Seller",
+      "type": "object",
+      "description": "Represents a seller using the platform. Authentication data is assumed to be handled externally.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the seller."
+        },
+        "email": {
+          "type": "string",
+          "description": "The seller's email address.",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "The seller's name."
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "name"
+      ]
+    },
+    "Customer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Customer",
+      "type": "object",
+      "description": "Represents a customer placing orders. Authentication data is assumed to be handled externally.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the customer."
+        },
+        "email": {
+          "type": "string",
+          "description": "The customer's email address.",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "The customer's name."
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "name"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "Seller",
+          "schema": {
+            "$ref": "#/backend/entities/Seller"
+          },
+          "description": "Sellers are stored here. The `userId` matches the Firebase Auth UID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the seller."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/stores/{storeId}",
+        "definition": {
+          "entityName": "Store",
+          "schema": {
+            "$ref": "#/backend/entities/Store"
+          },
+          "description": "Stores owned by the seller. `sellerId` is denormalized from the `userId`.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the seller."
+            },
+            {
+              "name": "storeId",
+              "description": "The unique ID of the store."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/stores/{storeId}/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Products belonging to a store. Includes denormalized `storeId` for authorization independence.",
+          "params": [
+            {
+              "name": "storeId",
+              "description": "The ID of the store."
+            },
+            {
+              "name": "productId",
+              "description": "The unique ID of the product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/stores/{storeId}/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Orders placed in a store. Includes `customerId` and `storeId` for authorization.",
+          "params": [
+            {
+              "name": "storeId",
+              "description": "The ID of the store."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique ID of the order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/stores/{storeId}/orders/{orderId}/order_items/{orderItemId}",
+        "definition": {
+          "entityName": "OrderItem",
+          "schema": {
+            "$ref": "#/backend/entities/OrderItem"
+          },
+          "description": "Items within an order. Includes `storeId` from the parent `order` for authorization.",
+          "params": [
+            {
+              "name": "storeId",
+              "description": "The ID of the store."
+            },
+            {
+              "name": "orderId",
+              "description": "The ID of the order."
+            },
+            {
+              "name": "orderItemId",
+              "description": "The unique ID of the order item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/subscription_plans/{subscriptionPlanId}",
+        "definition": {
+          "entityName": "SubscriptionPlan",
+          "schema": {
+            "$ref": "#/backend/entities/SubscriptionPlan"
+          },
+          "description": "Globally available subscription plans.",
+          "params": [
+            {
+              "name": "subscriptionPlanId",
+              "description": "The unique ID of the subscription plan."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/seller_subscriptions/{sellerSubscriptionId}",
+        "definition": {
+          "entityName": "SellerSubscription",
+          "schema": {
+            "$ref": "#/backend/entities/SellerSubscription"
+          },
+          "description": "Seller's subscription data. The `userId` matches the Firebase Auth UID.  `sellerId` is denormalized from the `userId`.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the seller."
+            },
+            {
+              "name": "sellerSubscriptionId",
+              "description": "The unique ID of the seller subscription."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/customers/{customerId}",
+        "definition": {
+          "entityName": "Customer",
+          "schema": {
+            "$ref": "#/backend/entities/Customer"
+          },
+          "description": "Customers are stored here.  customerId is distinct from userId, because authentication is handled externally for customers.",
+          "params": [
+            {
+              "name": "customerId",
+              "description": "The unique ID of the customer."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure security, scalability, and debuggability, adhering to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. The core strategy revolves around denormalization to eliminate `get()` calls in security rules, structural segregation for homogeneous security postures, and consistent access modeling.\n\n**Authorization Independence:**  Authorization data is denormalized where necessary. For example, access to `stores/{storeId}/products` depends on the `sellerId` who owns the `store`. The `sellerId` for each product is therefore duplicated in the product document to avoid `get()` calls. Similarly, `orders` and `order_items` will store relevant authorization data to avoid chaining security rules. Specifically, Orders will have `customerId` and `storeId`, and OrderItems will inherit storeId.\n\n**Structural Segregation:**  Data with different access requirements are stored in separate collections. For instance, the `SubscriptionPlan` data, which is globally accessible, is stored in a dedicated collection, separate from user-specific data.\n\n**Access Modeling:**  Path-based ownership is employed for user-owned data like stores (`/users/{userId}/stores/{storeId}`).  Collaborative data uses a membership map (though not explicitly used in this example) could be added to store documents, if sharing is desired.\n\n**QAPs Support:**\n*   Secure `list` operations are supported by ensuring that collections contain documents with homogeneous security requirements. For example, listing products within a store is secured by the `sellerId` denormalized into each product document.\n\nThis structure avoids hierarchical authorization dependencies, making security rules more robust and easier to debug. By eliminating the need for `get()` calls in rules, atomic operations are fully supported."
+  }
+}
