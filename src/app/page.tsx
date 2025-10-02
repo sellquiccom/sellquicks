@@ -262,43 +262,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col justify-center space-y-4 text-center lg:text-left">
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Run your store from anywhere</h2>
-                  <p className="max-w-[600px] text-gray-400 md:text-xl/relaxed lg:mx-0">
-                    Do it all right from your pocket with the full-featured SellQuic mobile app.
-                  </p>
-                </div>
-                 <div className="relative mx-auto border-gray-800 bg-gray-900 border-[10px] rounded-[2.5rem] h-[550px] w-[270px] shadow-xl">
-                    <div className="w-[140px] h-[18px] bg-gray-900 top-0 rounded-b-[1rem] left-1/2 -translate-x-1/2 absolute"></div>
-                    <div className="h-[46px] w-[3px] bg-gray-800 absolute -left-[13px] top-[72px] rounded-l-lg"></div>
-                    <div className="h-[46px] w-[3px] bg-gray-800 absolute -left-[13px] top-[124px] rounded-l-lg"></div>
-                    <div className="h-[64px] w-[3px] bg-gray-800 absolute -right-[13px] top-[142px] rounded-r-lg"></div>
-                    <div className="rounded-[2rem] overflow-hidden w-full h-full bg-indigo-900">
-                        <div className="text-white text-center flex flex-col items-center justify-center h-full px-4 space-y-4">
-                            <p className="text-sm text-indigo-300">Thursday, October 2</p>
-                            <p className="text-6xl font-bold">1:25</p>
-                            <div className="w-full space-y-2 pt-8">
-                                <div className="bg-white/10 backdrop-blur-md p-3 rounded-2xl text-left animate-slide-up [animation-delay:0.2s] opacity-0">
-                                    <p className="text-xs font-semibold">Shopify</p>
-                                    <p className="text-sm">[Verve] You have a new order for 4 items totaling $205.</p>
-                                    <p className="text-xs text-indigo-300 text-right">1:25 PM</p>
-                                </div>
-                                 <div className="bg-white/20 backdrop-blur-md p-3 rounded-2xl text-left animate-slide-up [animation-delay:0.4s] opacity-0">
-                                    <p className="text-xs font-semibold">Shopify</p>
-                                    <p className="text-sm">[Verve] You have a new order for 2 items totaling $190.</p>
-                                    <p className="text-xs text-indigo-300 text-right">1:25 PM</p>
-                                </div>
-                                <div className="bg-white/10 backdrop-blur-md p-3 rounded-2xl text-left animate-slide-up [animation-delay:0.6s] opacity-0">
-                                    <p className="text-xs font-semibold">Shopify</p>
-                                    <p className="text-sm">[Verve] You have a new order for 1 item.</p>
-                                    <p className="text-xs text-indigo-300 text-right">1:25 PM</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-              </div>
             </div>
           </div>
         </section>
