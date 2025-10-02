@@ -4,10 +4,20 @@ import Link from "next/link";
 import { MountainIcon, ShoppingCart } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { usePathname } from "next/navigation";
+import { DocumentData } from "firebase/firestore";
 
-export function StoreHeader() {
+interface StoreData extends DocumentData {
+    primaryColor?: string;
+}
+
+interface StoreHeaderProps {
+    storeData: StoreData | null;
+}
+
+export function StoreHeader({ storeData }: StoreHeaderProps) {
     const { totalItems } = useCart();
     const pathname = usePathname();
+    const primaryColor = storeData?.primaryColor;
 
     // Only show this header on non-dashboard pages
     if (pathname.startsWith('/dashboard') || pathname.startsWith('/login') || pathname.startsWith('/signup')) {
@@ -34,7 +44,10 @@ export function StoreHeader() {
                             <ShoppingCart className="h-6 w-6" />
                             <span className="sr-only">Shopping Cart</span>
                             {totalItems > 0 && (
-                                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+                                <span 
+                                    className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground"
+                                    style={primaryColor ? { backgroundColor: primaryColor } : {}}
+                                >
                                     {totalItems}
                                 </span>
                             )}

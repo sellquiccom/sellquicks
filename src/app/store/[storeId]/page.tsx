@@ -26,6 +26,7 @@ interface StoreData extends DocumentData {
     bannerUrl?: string;
     logoUrl?: string;
     uid?: string;
+    primaryColor?: string;
 }
 
 const ProductCard = ({ product, storeId }: { product: Product; storeId: string | null; }) => {
@@ -56,7 +57,7 @@ const ProductCard = ({ product, storeId }: { product: Product; storeId: string |
             className="object-cover w-full aspect-square"
             data-ai-hint={product.name}
           />
-          <Button size="icon" className="absolute bottom-2 right-2 rounded-full h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleAddToCart}>
+          <Button size="icon" className="absolute bottom-2 right-2 rounded-full h-8 w-8 bg-[var(--primary-dynamic,hsl(var(--primary)))] text-primary-foreground hover:bg-[var(--primary-dynamic,hsl(var(--primary)))]/90" onClick={handleAddToCart}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>
@@ -120,9 +121,10 @@ export default function StorePage({ params }: { params: { storeId: string } }) {
   }
   
   const storeName = storeData?.businessName || storeId;
+  const primaryColor = storeData?.primaryColor;
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen" style={primaryColor ? { '--primary-dynamic': primaryColor } as React.CSSProperties : {}}>
        {storeData?.bannerUrl && (
         <div className="relative w-full h-48 md:h-64 lg:h-80 bg-gray-200">
             <Image
@@ -161,7 +163,7 @@ export default function StorePage({ params }: { params: { storeId: string } }) {
             <section>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-foreground">Our Products</h2>
-                <Link href="#" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
+                <Link href="#" className="text-sm font-medium text-[var(--primary-dynamic,hsl(var(--primary)))] hover:underline flex items-center gap-1">
                   View All <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>

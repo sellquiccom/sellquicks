@@ -4,8 +4,6 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/hooks/use-auth';
 import { CartProvider } from '@/hooks/use-cart';
-import { StoreHeader } from '@/components/store-header';
-
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -24,7 +22,6 @@ export default function RootLayout({
       <body className={`${inter.variable} font-body antialiased`}>
         <AuthProvider>
             <CartProvider>
-                <StoreHeader />
                 {children}
             </CartProvider>
         </AuthProvider>

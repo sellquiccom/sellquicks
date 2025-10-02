@@ -45,6 +45,7 @@ export default function ProductDetailPage() {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [primaryColor, setPrimaryColor] = useState<string | undefined>();
 
   const { addToCart } = useCart();
   const { toast } = useToast();
@@ -68,6 +69,12 @@ export default function ProductDetailPage() {
 
           // Fetch related products from the same store (and user)
           if (productData.userId) {
+              const userRef = doc(db, 'users', productData.userId);
+              const userSnap = await getDoc(userRef);
+              if (userSnap.exists()) {
+                setPrimaryColor(userSnap.data().primaryColor);
+              }
+
               const q = query(
                   collection(db, 'products'),
                   where('userId', '==', productData.userId),
@@ -109,7 +116,7 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <div className="bg-background">
+    <div className="bg-background" style={primaryColor ? { '--primary-dynamic': primaryColor } as React.CSSProperties : {}}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
           {/* Image Gallery */}
@@ -132,7 +139,7 @@ export default function ProductDetailPage() {
               {product.images?.map((img: string, index: number) => (
                 <button
                   key={index}
-                  className={`aspect-square rounded-md overflow-hidden relative border-2 ${selectedImage === img ? 'border-primary' : 'border-transparent'}`}
+                  className={`aspect-square rounded-md overflow-hidden relative border-2 ${selectedImage === img ? 'border-[var(--primary-dynamic,hsl(var(--primary)))]' : 'border-transparent'}`}
                   onClick={() => setSelectedImage(img)}
                 >
                   <Image
@@ -161,7 +168,7 @@ export default function ProductDetailPage() {
               <p className="text-muted-foreground">{product.description}</p>
             </div>
             
-            <Button size="lg" className="w-full mb-4" onClick={handleAddToCart}>
+            <Button size="lg" className="w-full mb-4 bg-[var(--primary-dynamic,hsl(var(--primary)))] hover:bg-[var(--primary-dynamic,hsl(var(--primary)))]/90" onClick={handleAddToCart}>
                 <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
             </Button>
 
@@ -228,7 +235,7 @@ export default function ProductDetailPage() {
             <div>
               <div className="flex justify-between items-center mb-4">
                  <h2 className="text-2xl font-bold">Related Products</h2>
-                 <Link href={`/store/${storeId}`} className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
+                 <Link href={`/store/${storeId}`} className="text-sm font-medium text-[var(--primary-dynamic,hsl(var(--primary)))] hover:underline flex items-center gap-1">
                     View All <ChevronRight className="h-4 w-4" />
                  </Link>
               </div>
