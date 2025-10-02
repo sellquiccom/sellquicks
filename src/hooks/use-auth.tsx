@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { app, db } from '@/lib/firebase'; 
 import { useRouter } from 'next/navigation';
@@ -25,32 +24,31 @@ interface AppUser extends User {
 interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  refreshUser: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const auth = getAuth(app);
 
-  useEffect(() => {
-    const auth = getAuth(app);
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
-      if (firebaseUser) {
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
+  const fetchUserData = useCallback(async (firebaseUser: User | null): Promise<AppUser | null> => {
+    if (!firebaseUser) return null;
 
-        try {
-            const userDoc = await getDoc(userDocRef);
-            
-            let appUser: AppUser = { ...firebaseUser, isSuperAdmin: false };
+    const userDocRef = doc(db, 'users', firebaseUser.uid);
+    try {
+        const userDoc = await getDoc(userDocRef);
+        let appUser: AppUser = { ...firebaseUser, isSuperAdmin: false };
 
-            if (userDoc.exists()) {
-              const userData = userDoc.data() as DocumentData;
-              appUser = {
+        if (userDoc.exists()) {
+            const userData = userDoc.data() as DocumentData;
+            appUser = {
                 ...appUser,
                 businessName: userData.businessName,
                 storeId: userData.storeId,
@@ -60,21 +58,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     status: userData.subscription.status || 'active',
                     endDate: userData.subscription.endDate?.toDate() || null,
                 } : { planId: 'free', status: 'active', endDate: null },
-              };
-            } else {
-               appUser.subscription = { planId: 'free', status: 'active', endDate: null };
-            }
-            
-            setUser(appUser);
-        } catch (error) {
-            console.error("Error fetching user data:", error);
-            const fallbackUser: AppUser = {
-                ...firebaseUser,
-                subscription: { planId: 'free', status: 'active', endDate: null },
-                isSuperAdmin: false
             };
-            setUser(fallbackUser);
+        } else {
+           // If no user doc, they are on the default free plan
+           appUser.subscription = { planId: 'free', status: 'active', endDate: null };
         }
+        return appUser;
+    } catch (error) {
+        console.error("Error fetching user data:", error);
+        // Return a fallback user object on error
+        return {
+            ...firebaseUser,
+            subscription: { planId: 'free', status: 'active', endDate: null },
+            isSuperAdmin: false
+        };
+    }
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    setLoading(true);
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+        const updatedUser = await fetchUserData(currentUser);
+        setUser(updatedUser);
+    }
+    setLoading(false);
+  }, [auth, fetchUserData]);
+
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
+      if (firebaseUser) {
+        const appUser = await fetchUserData(firebaseUser);
+        setUser(appUser);
       } else {
         setUser(null);
       }
@@ -82,10 +99,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [fetchUserData, auth]);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

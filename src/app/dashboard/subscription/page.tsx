@@ -1,13 +1,16 @@
-
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import { Check, Star, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, addYears } from 'date-fns';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+
 
 const PlanFeature = ({ children }: { children: React.ReactNode }) => (
     <li className="flex items-center gap-3">
@@ -17,7 +20,37 @@ const PlanFeature = ({ children }: { children: React.ReactNode }) => (
 );
 
 export default function SubscriptionPage() {
-    const { user, loading } = useAuth();
+    const { user, loading, refreshUser } = useAuth();
+    const [isUpgrading, setIsUpgrading] = useState(false);
+    const { toast } = useToast();
+
+    const handleUpgrade = async () => {
+        if (!user) {
+            toast({ title: "You must be logged in to upgrade.", variant: "destructive" });
+            return;
+        }
+
+        setIsUpgrading(true);
+        try {
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+                subscription: {
+                    planId: 'pro',
+                    status: 'active',
+                    startDate: new Date(),
+                    endDate: addYears(new Date(), 1),
+                }
+            });
+            await refreshUser(); // This function needs to be added to the auth context
+            toast({ title: "Upgrade Successful!", description: "Welcome to the Pro plan." });
+        } catch (error) {
+            console.error("Error upgrading plan:", error);
+            toast({ title: "Upgrade Failed", description: "Could not process your upgrade. Please try again.", variant: "destructive" });
+        } finally {
+            setIsUpgrading(false);
+        }
+    };
+
 
     const currentPlanId = user?.subscription?.planId || 'free';
     const planExpiry = user?.subscription?.endDate;
@@ -99,8 +132,10 @@ export default function SubscriptionPage() {
                             <Button 
                                 size="lg" 
                                 className="w-full" 
-                                disabled={plan.isCurrent}
+                                disabled={plan.isCurrent || isUpgrading}
+                                onClick={plan.id === 'pro' ? handleUpgrade : undefined}
                             >
+                                {isUpgrading && plan.id === 'pro' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 {plan.isCurrent ? 'Your Current Plan' : (plan.id === 'pro' ? 'Upgrade to Pro' : 'Downgrade')}
                             </Button>
                         </CardFooter>
