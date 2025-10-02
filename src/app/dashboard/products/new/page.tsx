@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -13,8 +12,9 @@ import { generateDescription } from '@/ai/flows/generate-description-flow';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { addDoc, collection } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export default function NewProductPage() {
   const [productName, setProductName] = useState('');
@@ -78,6 +78,13 @@ export default function NewProductPage() {
     setProductImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
 
+  const uploadImage = async (file: File, path: string): Promise<string> => {
+    const storageRef = ref(storage, path);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
+  };
+
   const handleAddProduct = async () => {
     if (authLoading) {
       toast({ title: 'Please wait', description: 'Authentication is still loading.'});
@@ -87,20 +94,22 @@ export default function NewProductPage() {
       toast({ title: 'Authentication Error', description: 'You must be logged in to add a product.', variant: 'destructive'});
       return;
     }
-    if (!productName || !productPrice || !user.businessName) {
-      toast({ title: 'Missing Information', description: 'Please fill out the product name and price, and ensure your business name is set.', variant: 'destructive'});
+    if (!productName || !productPrice || !user.storeId) {
+      toast({ title: 'Missing Information', description: 'Please fill out the product name and price.', variant: 'destructive'});
       return;
     }
 
     setIsSaving(true);
     try {
-      // In a real app, you would upload images to a service like Firebase Storage
-      // and get the URLs. For now, we'll just store placeholder image URLs.
-      const imageUrls = productImages.map(file => `https://picsum.photos/seed/${file.name}/400/400`);
+      const imageUrls = await Promise.all(
+        productImages.map((file, index) => 
+          uploadImage(file, `products/${user.uid}/${Date.now()}_${index}_${file.name}`)
+        )
+      );
 
       await addDoc(collection(db, 'products'), {
         userId: user.uid,
-        storeId: user.businessName.toLowerCase().replace(/\s+/g, '-'), // Use business name as storeId
+        storeId: user.storeId,
         name: productName,
         price: parseFloat(productPrice),
         stock: parseInt(productStock, 10) || 0,

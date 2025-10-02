@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -10,8 +9,9 @@ import { useEffect, useState } from 'react';
 import { collection, query, where, getDocs, doc, getDoc, DocumentData, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { useCart } from '@/hooks/use-cart';
 
-interface Product extends DocumentData {
+export interface Product extends DocumentData {
   id: string;
   name: string;
   price: number;
@@ -29,42 +29,14 @@ interface StoreData extends DocumentData {
 
 const ProductCard = ({ product, storeId, storeOwnerId }: { product: Product; storeId: string | null; storeOwnerId: string | null }) => {
   const { toast } = useToast();
+  const { addToCart } = useCart();
 
-  const handleCreateOrder = async () => {
-    if (!storeId || !storeOwnerId) {
-      toast({
-        title: 'Error',
-        description: 'Store information is missing.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    try {
-      await addDoc(collection(db, 'orders'), {
-        productId: product.id,
-        productName: product.name,
-        productPrice: product.price,
-        storeOwnerId: storeOwnerId,
-        storeId: storeId,
-        status: 'pending',
-        customerInfo: { // Placeholder for customer details
-            name: 'John Doe',
-            email: 'john.doe@example.com'
-        },
-        createdAt: serverTimestamp(),
-      });
-      toast({
-        title: 'Order Placed!',
-        description: `Your order for "${product.name}" has been sent to the seller.`,
-      });
-    } catch (error) {
-      console.error('Error creating order:', error);
-      toast({
-        title: 'Order Failed',
-        description: 'Could not place the order at this time.',
-        variant: 'destructive',
-      });
-    }
+  const handleAddToCart = () => {
+    addToCart({ ...product, quantity: 1 });
+    toast({
+      title: 'Added to Cart',
+      description: `"${product.name}" has been added to your cart.`,
+    });
   };
 
   return (
@@ -78,7 +50,7 @@ const ProductCard = ({ product, storeId, storeOwnerId }: { product: Product; sto
           className="object-cover w-full aspect-square"
           data-ai-hint={product.name}
         />
-        <Button size="icon" className="absolute bottom-2 right-2 rounded-full h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCreateOrder}>
+        <Button size="icon" className="absolute bottom-2 right-2 rounded-full h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleAddToCart}>
           <Plus className="h-4 w-4" />
         </Button>
       </div>
