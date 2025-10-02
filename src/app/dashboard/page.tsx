@@ -56,7 +56,7 @@ export default function Dashboard() {
   const [storeUrl, setStoreUrl] = useState('');
 
   useEffect(() => {
-    if (user?.displayName) {
+    if (user && user.displayName) {
         const protocol = window.location.protocol;
         const host = window.location.host;
         let url;
@@ -68,7 +68,7 @@ export default function Dashboard() {
         }
         setStoreUrl(url);
     }
-  }, [user]);
+  }, [user, user?.displayName]);
 
   const copyToClipboard = () => {
     if (!storeUrl) return;
