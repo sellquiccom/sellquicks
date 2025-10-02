@@ -34,7 +34,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { useAuth, useRequireAuth } from '@/hooks/use-auth';
+import { useAuth, useRequireSuperAdmin } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
 const NavLink = ({ href, children, icon: Icon, ...props }: { href: string; children: React.ReactNode; icon: React.ElementType }) => {
@@ -60,8 +60,7 @@ export default function SuperAdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // We can create a useRequireSuperAdmin hook later
-  useRequireAuth(); 
+  useRequireSuperAdmin(); 
   const { user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -79,16 +78,12 @@ export default function SuperAdminLayout({
     }
   };
 
-  if (loading) {
+  if (loading || !user?.isSuperAdmin) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div>Loading Super Admin Dashboard...</div>
       </div>
     );
-  }
-
-  if (!user) {
-    return null; // Redirect is handled by useRequireAuth
   }
 
   const sidebarNav = (
@@ -180,5 +175,3 @@ export default function SuperAdminLayout({
     </div>
   );
 }
-
-    

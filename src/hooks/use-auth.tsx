@@ -11,6 +11,7 @@ import { doc, getDoc, DocumentData } from 'firebase/firestore';
 interface AppUser extends User {
     businessName?: string;
     storeId?: string;
+    isSuperAdmin?: boolean;
 }
 
 interface AuthContextType {
@@ -33,19 +34,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (firebaseUser) {
         // User is signed in, fetch their profile from Firestore
         const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const userDoc = await getDoc(userDocRef);
+        const superAdminDocRef = doc(db, 'superadmins', firebaseUser.uid);
+
+        const userDocPromise = getDoc(userDocRef);
+        const superAdminDocPromise = getDoc(superAdminDocRef);
+
+        const [userDoc, superAdminDoc] = await Promise.all([userDocPromise, superAdminDocPromise]);
         
-        // Start with the base Firebase user object
-        let appUser: AppUser = { ...firebaseUser };
+        let appUser: AppUser = { ...firebaseUser, isSuperAdmin: false };
 
         if (userDoc.exists()) {
           const userData = userDoc.data() as DocumentData;
-          // Augment the user object with data from Firestore
           appUser = {
             ...appUser,
             businessName: userData.businessName,
             storeId: userData.storeId,
           };
+        }
+        
+        if (superAdminDoc.exists() && superAdminDoc.data()?.role === 'superadmin') {
+            appUser.isSuperAdmin = true;
         }
         
         setUser(appUser);
@@ -83,4 +91,19 @@ export const useRequireAuth = () => {
     return { user, loading };
 };
 
-    
+export const useRequireSuperAdmin = () => {
+    const { user, loading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!loading) {
+            if (!user) {
+                router.push('/login');
+            } else if (!user.isSuperAdmin) {
+                router.push('/dashboard');
+            }
+        }
+    }, [user, loading, router]);
+
+    return { user, loading };
+};
