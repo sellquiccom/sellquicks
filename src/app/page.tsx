@@ -353,7 +353,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="w-full md:h-screen flex items-center bg-gray-950 text-white py-12 md:py-0">
+        <section className="w-full md:h-screen flex items-center text-white py-12 md:py-0" style={{ backgroundColor: '#5921c8' }}>
           <div className="container px-4 md:px-6">
             <div className="bg-gray-900/50 border border-gray-800 rounded-2xl shadow-inner-lg overflow-hidden">
               <div className="flex justify-between items-center p-4 border-b border-gray-800">
