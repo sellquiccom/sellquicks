@@ -340,6 +340,33 @@
         "createdAt"
       ]
     },
+    "SuperAdmin": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SuperAdmin",
+      "type": "object",
+      "description": "Represents a super administrator with platform-wide access.",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The Firebase Auth UID of the super admin."
+        },
+        "email": {
+          "type": "string",
+          "description": "The super admin's email address.",
+          "format": "email"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The display name for the super admin."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user, which should be 'superadmin'.",
+          "const": "superadmin"
+        }
+      },
+      "required": ["uid", "email", "displayName", "role"]
+    },
     "Customer": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Customer",
@@ -452,6 +479,12 @@
             "$ref": "#/entities/Delivery"
         },
         "description": "Stores delivery options created by a specific user."
+    },
+    "/superadmins/{userId}": {
+      "schema": {
+        "$ref": "#/entities/SuperAdmin"
+      },
+      "description": "Stores super admin user information. The document ID `userId` must match the authenticated user's UID."
     }
   }
 }
