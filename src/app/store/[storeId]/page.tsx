@@ -26,6 +26,7 @@ export interface Product extends DocumentData {
 
 interface StoreData extends DocumentData {
     businessName?: string;
+    tagline?: string;
     bannerUrl?: string;
     logoUrl?: string;
     uid?: string;
@@ -188,7 +189,7 @@ export default function StorePage({ params }: { params: { storeId: string } }) {
               )}
               <div className='pt-2'>
                 <h1 className="text-2xl font-bold">{storeName}</h1>
-                <p className="text-muted-foreground">The best place to find your favorite kicks.</p>
+                <p className="text-muted-foreground">{storeData?.tagline || 'The best place to find your favorite items.'}</p>
               </div>
           </div>
         </header>

@@ -10,6 +10,7 @@ import { StoreFooter } from '@/components/store-footer';
 
 interface StoreData extends DocumentData {
     businessName?: string;
+    tagline?: string;
     bannerUrl?: string;
     logoUrl?: string;
     uid?: string;
@@ -65,3 +66,5 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+
+    

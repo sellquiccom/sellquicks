@@ -294,6 +294,10 @@
           "type": "string",
           "description": "The seller's business name."
         },
+        "tagline": {
+          "type": "string",
+          "description": "A short slogan or tagline for the store."
+        },
         "storeId": {
           "type": "string",
           "description": "The URL-friendly slug for the store."

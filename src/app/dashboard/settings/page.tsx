@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { Textarea } from '@/components/ui/textarea';
 
 const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -24,6 +25,7 @@ const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
 interface StoreSettings {
   logoUrl?: string;
   bannerUrl?: string;
+  tagline?: string;
   primaryColor?: string;
   accentColor?: string;
   twitter?: string;
@@ -43,6 +45,7 @@ export default function SettingsPage() {
     facebook: '',
     instagram: '',
     tiktok: '',
+    tagline: '',
   });
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -64,6 +67,7 @@ export default function SettingsPage() {
         setSettings({
           logoUrl: data.logoUrl,
           bannerUrl: data.bannerUrl,
+          tagline: data.tagline || '',
           primaryColor: data.primaryColor || '#e11d48',
           accentColor: data.accentColor || '#f4f4f5',
           twitter: data.twitter || '',
@@ -143,7 +147,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSettingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSettingChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setSettings(prev => ({ ...prev, [id]: value }));
   };
@@ -173,6 +177,17 @@ export default function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+           <div className="space-y-2">
+            <Label htmlFor="tagline">Store Tagline</Label>
+            <Textarea 
+                id="tagline" 
+                placeholder="e.g., The best kicks in town." 
+                value={settings.tagline} 
+                onChange={handleSettingChange}
+                disabled={isSaving}
+                className="min-h-[80px]"
+            />
+          </div>
           <div className="space-y-2">
             <Label>Store Logo</Label>
             <div className="flex items-center gap-4">
@@ -291,3 +306,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
