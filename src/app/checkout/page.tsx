@@ -7,6 +7,7 @@ import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp, writeBatch, doc, getDocs, query, where } from 'firebase/firestore';
+import { generateOrderCode } from '@/lib/order-code';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,6 +57,7 @@ export default function CheckoutPage() {
       return;
     }
     
+    // Group items by seller (storeOwnerId)
     const ordersByStore: { [key: string]: typeof cart } = cart.reduce((acc, item) => {
       const storeOwnerId = item.userId; 
       if (!acc[storeOwnerId]) {
@@ -68,23 +70,29 @@ export default function CheckoutPage() {
     setIsPlacingOrder(true);
     
     try {
-      const batch = writeBatch(db);
-      let firstStoreId: string | null = null;
+      // In this manual payment model, we assume a single seller per transaction
+      // for simplicity of payment instructions. A real multi-vendor cart would be more complex.
+      if (Object.keys(ordersByStore).length > 1) {
+          toast({
+              title: "Multiple Stores",
+              description: "You can only check out items from one store at a time for manual payment.",
+              variant: "destructive",
+          });
+          setIsPlacingOrder(false);
+          return;
+      }
+      
+      const storeOwnerId = Object.keys(ordersByStore)[0];
+      const storeItems = ordersByStore[storeOwnerId];
+      const storeId = storeItems[0]?.storeId;
+      const totalAmount = storeItems.reduce((sum, item) => sum + item.price * item.quantity, 0) + shippingCost;
+      const paymentReference = generateOrderCode();
 
-      for (const storeOwnerId in ordersByStore) {
-        const storeItems = ordersByStore[storeOwnerId];
-        const storeId = storeItems[0]?.storeId;
-        if (!firstStoreId) {
-          firstStoreId = storeId;
-        }
-        
-        const totalAmount = storeItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-        const orderRef = doc(collection(db, 'orders'));
-        batch.set(orderRef, {
+      const newOrderRef = await addDoc(collection(db, 'orders'), {
             storeOwnerId,
             storeId,
-            status: 'pending',
+            status: 'awaiting-payment',
+            paymentReference,
             totalAmount,
             customerInfo: { name, email, phone, address },
             items: storeItems.map(item => ({
@@ -95,22 +103,10 @@ export default function CheckoutPage() {
                 image: item.images && item.images.length > 0 ? item.images[0] : null,
             })),
             createdAt: serverTimestamp(),
-        });
-      }
-      
-      await batch.commit();
-
-      toast({
-        title: 'Order Placed Successfully!',
-        description: 'Thank you for your purchase. The seller(s) will be in touch.',
       });
-      clearCart();
       
-      if (firstStoreId) {
-        router.push(`/store/${firstStoreId}/thank-you`);
-      } else {
-        router.push('/');
-      }
+      clearCart();
+      router.push(`/order/awaiting-payment/${newOrderRef.id}`);
 
     } catch (error) {
       console.error('Error placing order: ', error);
@@ -119,8 +115,7 @@ export default function CheckoutPage() {
         description: 'Something went wrong. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-        setIsPlacingOrder(false);
+      setIsPlacingOrder(false);
     }
   };
 
@@ -210,3 +205,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    

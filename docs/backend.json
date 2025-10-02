@@ -136,7 +136,11 @@
         },
         "status": {
           "type": "string",
-          "description": "The status of the order (e.g., pending, confirmed, fulfilled)."
+          "description": "The status of the order (e.g., pending, awaiting-payment, confirmed, fulfilled)."
+        },
+        "paymentReference": {
+            "type": "string",
+            "description": "The unique code for the customer to use as a payment reference."
         }
       },
       "required": [
@@ -306,6 +310,14 @@
         "tiktok": {
             "type": "string",
             "description": "The seller's TikTok username."
+        },
+        "momoNumber": {
+            "type": "string",
+            "description": "The seller's mobile money (MOMO) number for payments."
+        },
+        "momoAccountName": {
+            "type": "string",
+            "description": "The name associated with the seller's MOMO account."
         }
       },
       "required": [
