@@ -148,7 +148,7 @@ export default function OrdersPage() {
                   <TableCell>
                     <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status}</Badge>
                   </TableCell>
-                  <TableCell className="text-right">GHS {order.totalAmount.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">GHS {typeof order.totalAmount === 'number' ? order.totalAmount.toFixed(2) : '0.00'}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
