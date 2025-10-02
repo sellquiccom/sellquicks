@@ -174,10 +174,10 @@ const TakeOrdersSection = () => {
     return (
         <section className="w-full py-12 md:py-24 lg:py-32 bg-accent">
             <div className="container px-4 md:px-6">
-                <div className="grid gap-10 lg:grid-cols-2 lg:gap-20 items-center">
-                    <div className="space-y-6">
+                <div className="grid gap-10 lg:grid-cols-1 lg:gap-20 items-center justify-center">
+                    <div className="space-y-6 text-center">
                         <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-accent-foreground">Take Orders Anytime, Anywhere</h2>
-                        <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed">
+                        <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed mx-auto">
                             Share your store link on social media and take orders 24/7—even while you sleep. Run sales with discounts and coupons, and let customers check out directly.
                         </p>
                         <Button size="lg" asChild>
@@ -185,47 +185,6 @@ const TakeOrdersSection = () => {
                                 Get Started <ArrowRight className="ml-2 h-5 w-5" />
                             </Link>
                         </Button>
-                    </div>
-                    <div className="relative">
-                        <div className="relative bg-white p-4 sm:p-6 rounded-2xl shadow-2xl border border-gray-200/50">
-                            <div className="relative bg-gray-50 rounded-lg p-4 space-y-4">
-                                <div className="flex items-center justify-center space-x-4 sm:space-x-6">
-                                    {categories.map((cat) => (
-                                        <div key={cat.id} className="flex flex-col items-center gap-1.5">
-                                            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-gray-200">
-                                                <Image src={cat.imageUrl} alt={cat.description} width={64} height={64} className="object-cover w-full h-full" data-ai-hint={cat.imageHint} />
-                                            </div>
-                                            <span className="text-xs font-medium text-muted-foreground">{cat.description}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {featuredProducts.map(product => (
-                                        <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow-sm">
-                                            <Image src={product.imageUrl} alt={product.description} width={200} height={200} className="object-cover w-full aspect-square" data-ai-hint={product.imageHint} />
-                                            <div className="p-2">
-                                                <h4 className="text-xs font-medium">{product.description}</h4>
-                                                <p className="text-sm font-semibold">GHS 300.00</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="absolute -top-5 -right-5">
-                            <div className="w-16 h-16 bg-pink-400 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                                <Clock className="w-8 h-8 text-white" />
-                            </div>
-                        </div>
-                         <div className="absolute bottom-10 left-[-20px] sm:left-[-40px] bg-white p-3 rounded-lg shadow-xl flex items-center gap-3 animate-slide-up">
-                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                               <CheckCircle className="w-5 h-5 text-green-600" />
-                            </div>
-                            <div>
-                                <p className="font-bold text-sm">You have a new order</p>
-                                <p className="text-xs text-muted-foreground">Michael just ordered a Pulse Pro shirt</p>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -516,5 +475,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
