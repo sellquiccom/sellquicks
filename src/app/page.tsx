@@ -350,40 +350,6 @@ export default function Home() {
         </section>
 
 
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
-          <div className="container grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-12">
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
-                How to create a website for free
-              </h2>
-              <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Follow these 7 simple steps to create a website today.
-              </p>
-              <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Button size="lg" asChild>
-                  <Link href="/signup">Get Started</Link>
-                </Button>
-                <Button size="lg" variant="ghost" asChild>
-                  <Link href="#">Learn more <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                </Button>
-              </div>
-            </div>
-            <div className="flex flex-col gap-4">
-              {steps.map((step, index) => (
-                <div key={index} className="border-b pb-4">
-                    <div className="flex items-baseline gap-4">
-                        <span className="text-lg font-bold text-muted-foreground">{index + 1}.</span>
-                        <div>
-                            <h3 className="text-lg font-semibold">{step.title}</h3>
-                            <p className="text-sm text-muted-foreground">{step.description}</p>
-                        </div>
-                    </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-gray-800 z-10 bg-black text-white">
         <p className="text-xs text-gray-400">
