@@ -15,7 +15,7 @@ import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 
 export default function CheckoutPage() {
-  const { cart, totalItems, totalPrice, clearCart } = useCart();
+  const { cart, totalPrice, clearCart } = useCart();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -49,10 +49,15 @@ export default function CheckoutPage() {
     
     try {
       const batch = writeBatch(db);
+      let firstStoreId: string | null = null;
 
       for (const storeOwnerId in ordersByStore) {
         const storeItems = ordersByStore[storeOwnerId];
-        const storeId = storeItems[0]?.storeId; 
+        const storeId = storeItems[0]?.storeId;
+        if (!firstStoreId) {
+          firstStoreId = storeId;
+        }
+        
         const totalAmount = storeItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
         const orderRef = doc(collection(db, 'orders'));
@@ -80,7 +85,13 @@ export default function CheckoutPage() {
         description: 'Thank you for your purchase. The seller(s) will be in touch.',
       });
       clearCart();
-      router.push('/');
+      
+      if (firstStoreId) {
+        router.push(`/store/${firstStoreId}/thank-you`);
+      } else {
+        router.push('/');
+      }
+
     } catch (error) {
       console.error('Error placing order: ', error);
       toast({
