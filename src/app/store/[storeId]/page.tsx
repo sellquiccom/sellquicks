@@ -27,11 +27,13 @@ interface StoreData extends DocumentData {
     uid?: string;
 }
 
-const ProductCard = ({ product, storeId, storeOwnerId }: { product: Product; storeId: string | null; storeOwnerId: string | null }) => {
+const ProductCard = ({ product, storeId }: { product: Product; storeId: string | null; }) => {
   const { toast } = useToast();
   const { addToCart } = useCart();
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent link navigation
+    e.preventDefault(); // Prevent link navigation
     addToCart({ ...product, quantity: 1 });
     toast({
       title: 'Added to Cart',
@@ -39,26 +41,30 @@ const ProductCard = ({ product, storeId, storeOwnerId }: { product: Product; sto
     });
   };
 
+  if (!storeId) return null;
+
   return (
-    <div className="bg-card rounded-lg shadow-sm overflow-hidden group">
-      <div className="relative">
-        <Image
-          src={product.images && product.images.length > 0 ? product.images[0] : `https://picsum.photos/seed/${product.id}/400/400`}
-          alt={product.name}
-          width={400}
-          height={400}
-          className="object-cover w-full aspect-square"
-          data-ai-hint={product.name}
-        />
-        <Button size="icon" className="absolute bottom-2 right-2 rounded-full h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleAddToCart}>
-          <Plus className="h-4 w-4" />
-        </Button>
+    <Link href={`/store/${storeId}/product/${product.id}`} className="block">
+      <div className="bg-card rounded-lg shadow-sm overflow-hidden group">
+        <div className="relative">
+          <Image
+            src={product.images && product.images.length > 0 ? product.images[0] : `https://picsum.photos/seed/${product.id}/400/400`}
+            alt={product.name}
+            width={400}
+            height={400}
+            className="object-cover w-full aspect-square"
+            data-ai-hint={product.name}
+          />
+          <Button size="icon" className="absolute bottom-2 right-2 rounded-full h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleAddToCart}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="p-4">
+          <h3 className="text-sm font-medium text-foreground">{product.name}</h3>
+          <p className="text-muted-foreground font-semibold">GHS {product.price.toFixed(2)}</p>
+        </div>
       </div>
-      <div className="p-4">
-        <h3 className="text-sm font-medium text-foreground">{product.name}</h3>
-        <p className="text-muted-foreground font-semibold">GHS {product.price.toFixed(2)}</p>
-      </div>
-    </div>
+    </Link>
   );
 };
 
@@ -160,7 +166,7 @@ export default function StorePage({ params }: { params: { storeId: string } }) {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} storeId={storeId} storeOwnerId={storeData?.uid || null} />
+                  <ProductCard key={product.id} product={product} storeId={storeId} />
                 ))}
               </div>
             </section>
