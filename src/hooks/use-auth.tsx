@@ -31,17 +31,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const auth = getAuth(app);
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true); // Set loading to true at the start of auth check
+      setLoading(true);
       if (firebaseUser) {
         // User is signed in, fetch their profile from Firestore
         const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const superAdminDocRef = doc(db, 'superadmins', firebaseUser.uid);
 
         try {
-            const [userDoc, superAdminDoc] = await Promise.all([
-                getDoc(userDocRef),
-                getDoc(superAdminDocRef)
-            ]);
+            const userDoc = await getDoc(userDocRef);
             
             let appUser: AppUser = { ...firebaseUser, isSuperAdmin: false };
 
@@ -52,10 +48,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 businessName: userData.businessName,
                 storeId: userData.storeId,
               };
-            }
-            
-            if (superAdminDoc.exists() && superAdminDoc.data()?.role === 'superadmin') {
+              // Check for superadmin role directly on the user document
+              if (userData.role === 'superadmin') {
                 appUser.isSuperAdmin = true;
+              }
             }
             
             setUser(appUser);
