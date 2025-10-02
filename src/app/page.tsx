@@ -1,4 +1,5 @@
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { MountainIcon, ArrowRight, Monitor, Smartphone, RefreshCw, Blend, ToyBrick, Bot, Sparkles, Package, ShoppingCart, BarChart2, DollarSign, Users, MoreHorizontal, CircleUser, Bell, Search, Home as HomeIcon, Package2, CreditCard, Activity, ArrowUp, ArrowDown } from "lucide-react";
 import Link from "next/link";
@@ -63,6 +64,30 @@ const steps = [
         description: "Use built-in marketing tools to grow and expand your reach."
     }
 ];
+
+const faqs = [
+    {
+        question: "What is SellQuic?",
+        answer: "SellQuic is a comprehensive ecommerce platform that allows anyone to set up an online store and sell their products. We provide the tools you need to create a beautiful, functional storefront, manage your inventory, and process payments, all without needing any coding skills."
+    },
+    {
+        question: "Is SellQuic free to use?",
+        answer: "Yes, SellQuic offers a robust free plan that includes all the essential features you need to start selling online. As your business grows, you can upgrade to one of our premium plans for advanced features like lower transaction fees, enhanced analytics, and more."
+    },
+    {
+        question: "What kind of products can I sell?",
+        answer: "You can sell a wide variety of products on SellQuic, from physical goods like clothing and electronics to digital products like ebooks and software. Our platform is flexible and designed to support diverse business needs."
+    },
+    {
+        question: "How do I get paid?",
+        answer: "SellQuic integrates with popular payment gateways to ensure you get your money securely and on time. You can connect your bank account or mobile money account and receive payouts directly. We support various local and international payment methods to cater to your customers."
+    },
+     {
+        question: "Can I use my own domain name?",
+        answer: "Absolutely! While we provide a free `sellquic.com` subdomain to get you started, you can easily connect your own custom domain name to your store for a more professional, branded look. This feature is available on all our paid plans."
+    }
+];
+
 
 export default function Home() {
   return (
@@ -298,6 +323,32 @@ export default function Home() {
             </div>
           </div>
         </section>
+        
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
+            <div className="container px-4 md:px-6">
+                <div className="mx-auto max-w-3xl text-center">
+                    <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                        Frequently asked questions
+                    </h2>
+                    <p className="mt-4 text-muted-foreground md:text-xl/relaxed">
+                        Have a different question? <Link href="#" className="font-medium text-primary underline-offset-4 hover:underline">Contact us</Link>.
+                    </p>
+                </div>
+                <div className="mx-auto max-w-4xl mt-12">
+                    <Accordion type="single" collapsible className="w-full">
+                        {faqs.map((faq, index) => (
+                             <AccordionItem value={`item-${index + 1}`} key={index}>
+                                <AccordionTrigger className="text-lg font-medium text-left hover:no-underline">{faq.question}</AccordionTrigger>
+                                <AccordionContent className="text-base text-muted-foreground">
+                                    {faq.answer}
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
+                </div>
+            </div>
+        </section>
+
 
         <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
           <div className="container grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-12">
