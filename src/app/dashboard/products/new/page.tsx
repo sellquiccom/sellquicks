@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,17 +12,25 @@ import { Sparkles, UploadCloud, X, Loader2 } from 'lucide-react';
 import { generateDescription } from '@/ai/flows/generate-description-flow';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, query, onSnapshot, DocumentData } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface Category extends DocumentData {
+  id: string;
+  name: string;
+}
 
 export default function NewProductPage() {
   const [productName, setProductName] = useState('');
   const [productPrice, setProductPrice] = useState('');
   const [productStock, setProductStock] = useState('');
+  const [productCategory, setProductCategory] = useState('');
   const [productDescription, setProductDescription] = useState('');
   const [productImages, setProductImages] = useState<File[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -29,6 +38,18 @@ export default function NewProductPage() {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(collection(db, 'users', user.uid, 'categories'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const categoriesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+        setCategories(categoriesData);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const handleGenerateDescription = async () => {
     if (!productName) {
@@ -113,6 +134,7 @@ export default function NewProductPage() {
         name: productName,
         price: parseFloat(productPrice),
         stock: parseInt(productStock, 10) || 0,
+        category: productCategory,
         description: productDescription,
         images: imageUrls,
         createdAt: new Date(),
@@ -166,7 +188,8 @@ export default function NewProductPage() {
               />
             </div>
           </div>
-           <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
               <Label htmlFor="product-stock">Stock Quantity</Label>
               <Input 
                 id="product-stock" 
@@ -177,6 +200,20 @@ export default function NewProductPage() {
                 disabled={isSaving}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="product-category">Category</Label>
+              <Select value={productCategory} onValueChange={setProductCategory} disabled={isSaving}>
+                  <SelectTrigger id="product-category">
+                      <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <div className="space-y-2">
             <Label>Product Images</Label>

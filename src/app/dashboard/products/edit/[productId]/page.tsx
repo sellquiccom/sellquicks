@@ -12,22 +12,30 @@ import { Sparkles, UploadCloud, X, Loader2 } from 'lucide-react';
 import { generateDescription } from '@/ai/flows/generate-description-flow';
 import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, query, onSnapshot, DocumentData } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ProductData {
     name: string;
     price: string;
     stock: string;
+    category: string;
     description: string;
     images: string[];
     userId: string;
 }
 
+interface Category extends DocumentData {
+  id: string;
+  name: string;
+}
+
 export default function EditProductPage() {
   const [product, setProduct] = useState<ProductData | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
   
@@ -40,6 +48,18 @@ export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
   const productId = params.productId as string;
+
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(collection(db, 'users', user.uid, 'categories'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const categoriesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+        setCategories(categoriesData);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   useEffect(() => {
     if (!productId) return;
@@ -55,6 +75,7 @@ export default function EditProductPage() {
                     name: data.name || '',
                     price: data.price?.toString() || '',
                     stock: data.stock?.toString() || '0',
+                    category: data.category || '',
                     description: data.description || '',
                     images: data.images || [],
                     userId: data.userId || ''
@@ -76,6 +97,11 @@ export default function EditProductPage() {
   const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (!product) return;
     setProduct({ ...product, [e.target.id]: e.target.value });
+  };
+  
+  const handleCategoryChange = (value: string) => {
+    if (!product) return;
+    setProduct({ ...product, category: value });
   };
 
   const handleGenerateDescription = async () => {
@@ -139,7 +165,6 @@ export default function EditProductPage() {
   };
   
   const deleteImage = async (imageUrl: string) => {
-    // Only try to delete from storage if it's a firebase storage URL
     if (!imageUrl.includes('firebasestorage.googleapis.com')) {
         return; 
     }
@@ -147,10 +172,9 @@ export default function EditProductPage() {
       const imageRef = ref(storage, imageUrl);
       await deleteObject(imageRef);
     } catch (error: any) {
-        // Ignore "object-not-found" errors, which can happen if the file was already deleted
         if (error.code !== 'storage/object-not-found') {
             console.error("Error deleting image from storage:", error);
-            throw error; // Re-throw other errors
+            throw error;
         }
     }
   };
@@ -168,22 +192,20 @@ export default function EditProductPage() {
 
     setIsSaving(true);
     try {
-      // 1. Delete images marked for removal
       await Promise.all(imagesToRemove.map(url => deleteImage(url)));
       
-      // 2. Upload new images
       const newImageUrls = await Promise.all(
         newImages.map((file, index) =>
           uploadImage(file, `products/${user.uid}/${productId}_${Date.now()}_${index}_${file.name}`)
         )
       );
 
-      // 3. Update Firestore document
       const productRef = doc(db, 'products', productId);
       await updateDoc(productRef, {
         name: product.name,
         price: parseFloat(product.price),
         stock: parseInt(product.stock, 10) || 0,
+        category: product.category,
         description: product.description,
         images: [...product.images, ...newImageUrls],
         updatedAt: new Date(),
@@ -214,7 +236,6 @@ export default function EditProductPage() {
     return <div className="flex h-full items-center justify-center">Product not found.</div>;
   }
 
-  // Fallback for image display if product.images is undefined
   const displayImages = product.images || [];
   const totalImageCount = displayImages.length + newImages.length;
 
@@ -247,16 +268,31 @@ export default function EditProductPage() {
               />
             </div>
           </div>
-           <div className="space-y-2">
-              <Label htmlFor="stock">Stock Quantity</Label>
-              <Input 
-                id="stock" 
-                type="number"
-                value={product.stock}
-                onChange={handleFieldChange}
-                disabled={isSaving}
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <div className="space-y-2">
+                <Label htmlFor="stock">Stock Quantity</Label>
+                <Input 
+                  id="stock" 
+                  type="number"
+                  value={product.stock}
+                  onChange={handleFieldChange}
+                  disabled={isSaving}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select value={product.category} onValueChange={handleCategoryChange} disabled={isSaving}>
+                  <SelectTrigger id="category">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+          </div>
 
           <div className="space-y-2">
             <Label>Product Images</Label>
@@ -320,5 +356,3 @@ export default function EditProductPage() {
     </Card>
   );
 }
-
-    

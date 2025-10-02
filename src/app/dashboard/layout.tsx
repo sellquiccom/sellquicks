@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronRight,
   CreditCard,
+  Grid3x3,
   Home,
   LineChart,
   LogOut,
@@ -77,6 +78,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
+  const [isProductsOpen, setIsProductsOpen] = React.useState(pathname.startsWith('/dashboard/products'));
   const [isBookkeepingOpen, setIsBookkeepingOpen] = React.useState(pathname.startsWith('/dashboard/bookkeeping'));
   const [isAnalyticsOpen, setIsAnalyticsOpen] = React.useState(pathname.startsWith('/dashboard/analytics'));
 
@@ -137,7 +139,23 @@ export default function DashboardLayout({
         <nav className="grid items-start px-2 py-4 text-sm font-medium lg:px-4">
           <p className="px-3 pb-2 text-xs text-gray-500">MAIN MENU</p>
           <NavLink href="/dashboard" icon={Home}>Dashboard</NavLink>
-          <NavLink href="/dashboard/products" icon={Package}>Products</NavLink>
+
+          <Collapsible open={isProductsOpen} onOpenChange={setIsProductsOpen}>
+            <CollapsibleTrigger className="w-full">
+               <div className={cn("flex items-center justify-between w-full gap-3 rounded-lg px-3 py-2 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900", isProductsOpen && "bg-gray-100 text-gray-900")}>
+                  <div className='flex items-center gap-3'>
+                    <Package className="h-4 w-4" />
+                    Products
+                  </div>
+                  <ChevronRight className={cn("h-4 w-4 transition-transform", isProductsOpen && "rotate-90")} />
+                </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pt-1">
+              <NavLink href="/dashboard/products" icon={Package} isSubmenu>All Products</NavLink>
+              <NavLink href="/dashboard/products/categories" icon={Grid3x3} isSubmenu>Categories</NavLink>
+            </CollapsibleContent>
+          </Collapsible>
+          
           <NavLink href="/dashboard/orders" icon={ShoppingCart}>Orders</NavLink>
           
           <Collapsible open={isBookkeepingOpen} onOpenChange={setIsBookkeepingOpen}>

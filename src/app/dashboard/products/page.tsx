@@ -18,12 +18,14 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface Product extends DocumentData {
   id: string;
   name: string;
   price: string;
   stock: number;
+  category: string;
   images: string[];
 }
 
@@ -80,6 +82,7 @@ export default function ProductsPage() {
             <TableRow>
               <TableHead className="w-[80px]">Image</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead>Category</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -88,7 +91,7 @@ export default function ProductsPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center">Loading products...</TableCell>
+                <TableCell colSpan={6} className="text-center">Loading products...</TableCell>
               </TableRow>
             ) : products.length > 0 ? (
               products.map((product) => (
@@ -103,6 +106,9 @@ export default function ProductsPage() {
                       />
                   </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>
+                    {product.category ? <Badge variant="secondary">{product.category}</Badge> : 'N/A'}
+                  </TableCell>
                   <TableCell>GHS {product.price}</TableCell>
                   <TableCell>{product.stock || 0}</TableCell>
                   <TableCell className="text-right">
@@ -124,7 +130,7 @@ export default function ProductsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center">You haven't added any products yet.</TableCell>
+                <TableCell colSpan={6} className="text-center">You haven't added any products yet.</TableCell>
               </TableRow>
             )}
           </TableBody>

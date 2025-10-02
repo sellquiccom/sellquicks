@@ -73,7 +73,7 @@
         },
         "category": {
           "type": "string",
-          "description": "The category of the product."
+          "description": "The category of the product. This references the name of a Category document."
         },
         "stock": {
           "type": "number",
@@ -319,6 +319,31 @@
         "email",
         "name"
       ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Represents a product category defined by a seller.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the category."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the category."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user who created this category."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "userId"
+      ]
     }
   },
   "auth": {
@@ -344,8 +369,12 @@
             "$ref": "#/entities/Order"
         },
         "description": "Stores all orders for all stores."
+    },
+    "/users/{userId}/categories/{categoryId}": {
+      "schema": {
+        "$ref": "#/entities/Category"
+      },
+      "description": "Stores product categories created by a specific user."
     }
   }
 }
-
-    
