@@ -4,3 +4,6 @@ node_modules
 .next
 .firebase
 node_modules
+.firebase
+.next
+node_modules
