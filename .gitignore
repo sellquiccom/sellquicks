@@ -1,14 +1,30 @@
-# Next.js
-.next/
-out/
-node_modules/
 
-# Firebase functions build artifacts
-.firebase/
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Build output
+/.next/
+/out/
+/build
+
+# Firebase
+/.firebase
 firebase-debug.log
 
-# System files
+# Miscellaneous
 .DS_Store
-.env
+*.pem
+*.log
+
+# Local environment files
 .env.local
-.env.*.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# Vercel
+.vercel
