@@ -16,5 +16,13 @@
   },
   "storage": {
     "rules": "storage.rules"
+  },
+  "emulators": {
+    "hosting": {
+      "port": 9002
+    }
+  },
+  "functions": {
+    "source": ".firebase/sellquic/functions"
   }
 }
