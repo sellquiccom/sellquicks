@@ -18,39 +18,32 @@ export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const hostname = req.headers.get('host');
 
-  // Prevent rewrite loops for paths that are already rewritten.
-  if (url.pathname.startsWith('/store/')) {
-    return NextResponse.next();
-  }
-
+  // Define your production and development domains.
   const PROD_DOMAIN = process.env.PROD_DOMAIN || 'shadaai.com';
   const DEV_DOMAIN = 'localhost:9002';
 
   let storeId;
 
   if (hostname) {
-    if (hostname.endsWith(PROD_DOMAIN)) {
+    if (process.env.NODE_ENV === 'production' && hostname.endsWith(PROD_DOMAIN)) {
         const parts = hostname.split('.');
         if (parts.length > 2 && parts[0] !== 'www') {
             storeId = parts[0];
         }
-    } else if (hostname.endsWith(DEV_DOMAIN)) {
+    } else if (process.env.NODE_ENV !== 'production' && hostname.endsWith(DEV_DOMAIN)) {
         const parts = hostname.split('.');
-        // This logic is for local testing like `store.localhost:9002`
-        // It won't work for `store.shadaai.localhost` without hosts file modification
-        if (parts.length > 1 && parts[0] !== 'www' && parts[0] !== 'localhost') {
+        if (parts.length > 1 && parts[0] !== 'www') {
             storeId = parts[0];
         }
     }
   }
 
-  // If a storeId was found via subdomain, rewrite the path to the store page.
-  if (storeId) {
-    const newPath = `/store/${storeId}${url.pathname === '/' ? '' : url.pathname}`;
-    console.log(`Rewriting subdomain to ${newPath} for host ${hostname}`);
-    return NextResponse.rewrite(new URL(newPath, req.url));
+  // If a storeId was found via subdomain and we are on the root path, rewrite to the store page.
+  if (storeId && url.pathname === '/') {
+    console.log(`Rewriting subdomain to /store/${storeId} for host ${hostname}`);
+    return NextResponse.rewrite(new URL(`/store/${storeId}`, req.url));
   }
   
-  // No rewrite is needed for the main marketing site or other paths.
+  // No rewrite is needed for other paths or if no storeId is found.
   return NextResponse.next();
 }
