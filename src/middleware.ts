@@ -18,7 +18,7 @@ export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const hostname = req.headers.get('host');
 
-  // Prevent rewrite loops for store pages
+  // Prevent rewrite loops for paths that are already rewritten.
   if (url.pathname.startsWith('/store/')) {
     return NextResponse.next();
   }
@@ -26,45 +26,29 @@ export default async function middleware(req: NextRequest) {
   const PROD_DOMAIN = process.env.PROD_DOMAIN || 'shadaai.com';
   const DEV_DOMAIN = 'localhost:9002';
 
-  let storeId: string | undefined;
+  let storeId;
 
   if (hostname) {
-    if (process.env.NODE_ENV === 'production' && hostname.endsWith(PROD_DOMAIN)) {
-      const parts = hostname.split('.');
-      if (parts.length > 2 && parts[0] !== 'www') {
-        storeId = parts[0];
-      }
-    } else if (process.env.NODE_ENV !== 'production' && hostname.endsWith(DEV_DOMAIN)) {
-      const parts = hostname.split('.');
-      if (parts.length > 1 && parts[0] !== 'www') {
-        storeId = parts[0];
-      }
+    if (hostname.endsWith(PROD_DOMAIN)) {
+        const parts = hostname.split('.');
+        if (parts.length > 2 && parts[0] !== 'www') {
+            storeId = parts[0];
+        }
+    } else if (hostname.endsWith(DEV_DOMAIN)) {
+        const parts = hostname.split('.');
+        // This logic is for local testing like `store.localhost:9002`
+        // It won't work for `store.shadaai.localhost` without hosts file modification
+        if (parts.length > 1 && parts[0] !== 'www' && parts[0] !== 'localhost') {
+            storeId = parts[0];
+        }
     }
   }
 
-  // If a storeId was found, validate it before rewriting.
+  // If a storeId was found via subdomain, rewrite the path to the store page.
   if (storeId) {
-    // Construct the absolute URL for the API endpoint
-    const validationUrl = new URL(`/api/store-exists/${storeId}`, req.url);
-
-    try {
-      const response = await fetch(validationUrl);
-      const { exists } = await response.json();
-
-      if (exists) {
-        const newPath = `/store/${storeId}${url.pathname === '/' ? '' : url.pathname}`;
-        console.log(`Rewriting subdomain to ${newPath} for host ${hostname}`);
-        return NextResponse.rewrite(new URL(newPath, req.url));
-      } else {
-        // If the store does not exist, rewrite to a "not found" page.
-        console.log(`Store ID "${storeId}" not found. Rewriting to /store-not-found.`);
-        return NextResponse.rewrite(new URL('/store-not-found', req.url));
-      }
-    } catch (error) {
-      console.error('Middleware API call failed:', error);
-      // Fallback to not found on API error
-      return NextResponse.rewrite(new URL('/store-not-found', req.url));
-    }
+    const newPath = `/store/${storeId}${url.pathname === '/' ? '' : url.pathname}`;
+    console.log(`Rewriting subdomain to ${newPath} for host ${hostname}`);
+    return NextResponse.rewrite(new URL(newPath, req.url));
   }
   
   // No rewrite is needed for the main marketing site or other paths.
