@@ -42,7 +42,7 @@ function ChevronDownIcon(props: React.SVGProps<SVGSVGElement>) {
 
 const faqs = [
     {
-        question: "What is SellQuic?",
+        question: "What is SellQuickkks?",
         answer: "SellQuic is a comprehensive ecommerce platform that allows anyone to set up an online store and sell their products. We provide the tools you need to create a beautiful, functional storefront, manage your inventory, and process payments, all without needing any coding skills."
     },
     {
@@ -78,7 +78,7 @@ const InternationalSection = () => {
         <section className="w-full bg-white text-gray-900 py-24 sm:py-32">
             <div className="container mx-auto px-4 md:px-6">
                 <div className="text-center max-w-3xl mx-auto mb-16">
-                    <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Sell anywhere</h2>
+                    <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Sell</h2>
                     <p className="mt-4 text-gray-600 md:text-xl">
                         Reach customers around the world with localized shopping experiences and seamless international shipping.
                     </p>

@@ -18,6 +18,11 @@ export default function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const hostname = req.headers.get('host');
 
+  // Prevent rewrite loops for store pages
+  if (url.pathname.startsWith('/store/')) {
+    return NextResponse.next();
+  }
+
   const PROD_DOMAIN = process.env.PROD_DOMAIN || 'shadaai.com';
   const DEV_DOMAIN = 'localhost:9002';
 
@@ -39,8 +44,8 @@ export default function middleware(req: NextRequest) {
 
   // If a storeId was found via subdomain, rewrite the path to the store page.
   if (storeId) {
-    console.log(`Rewriting subdomain to /store/${storeId} for host ${hostname}`);
     const newPath = `/store/${storeId}${url.pathname}`;
+    console.log(`Rewriting subdomain host "${hostname}" to path "${newPath}"`);
     return NextResponse.rewrite(new URL(newPath, req.url));
   }
   
