@@ -14,7 +14,7 @@ export const config = {
   ],
 };
 
-export default function middleware(req: NextRequest) {
+export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const hostname = req.headers.get('host');
 
@@ -42,11 +42,29 @@ export default function middleware(req: NextRequest) {
     }
   }
 
-  // If a storeId was found via subdomain, rewrite the path to the store page.
+  // If a storeId was found, validate it before rewriting.
   if (storeId) {
-    const newPath = `/store/${storeId}${url.pathname}`;
-    console.log(`Rewriting subdomain host "${hostname}" to path "${newPath}"`);
-    return NextResponse.rewrite(new URL(newPath, req.url));
+    // Construct the absolute URL for the API endpoint
+    const validationUrl = new URL(`/api/store-exists/${storeId}`, req.url);
+
+    try {
+      const response = await fetch(validationUrl);
+      const { exists } = await response.json();
+
+      if (exists) {
+        const newPath = `/store/${storeId}${url.pathname === '/' ? '' : url.pathname}`;
+        console.log(`Rewriting subdomain to ${newPath} for host ${hostname}`);
+        return NextResponse.rewrite(new URL(newPath, req.url));
+      } else {
+        // If the store does not exist, rewrite to a "not found" page.
+        console.log(`Store ID "${storeId}" not found. Rewriting to /store-not-found.`);
+        return NextResponse.rewrite(new URL('/store-not-found', req.url));
+      }
+    } catch (error) {
+      console.error('Middleware API call failed:', error);
+      // Fallback to not found on API error
+      return NextResponse.rewrite(new URL('/store-not-found', req.url));
+    }
   }
   
   // No rewrite is needed for the main marketing site or other paths.
