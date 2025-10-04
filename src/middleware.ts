@@ -31,18 +31,13 @@ export default function middleware(req: NextRequest) {
       }
     } else if (process.env.NODE_ENV !== 'production' && hostname.endsWith(DEV_DOMAIN)) {
       const parts = hostname.split('.');
-      // For local dev, we use paths like /store/storeId, so subdomain logic isn't needed here.
-      // This part could be used for localhost subdomain testing if hosts file is configured.
       if (parts.length > 1 && parts[0] !== 'www') {
-        // This is a simple approximation for local dev if you set up subdomains.
-        // e.g. store1.localhost:9002
         storeId = parts[0];
       }
     }
   }
 
   // If a storeId was found via subdomain, rewrite the path to the store page.
-  // This handles both root visits (e.g., store1.shadaai.com) and deep links (e.g., store1.shadaai.com/product/abc)
   if (storeId) {
     console.log(`Rewriting subdomain to /store/${storeId} for host ${hostname}`);
     const newPath = `/store/${storeId}${url.pathname}`;
