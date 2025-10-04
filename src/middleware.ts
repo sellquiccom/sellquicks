@@ -1,27 +1,54 @@
-// middleware.ts (temporary diagnostic)
-import { NextRequest, NextResponse } from "next/server";
 
-export const config = { matcher: ["/((?!api/|_next/|_static/|_vercel).*)"] };
+import { NextRequest, NextResponse } from 'next/server';
+
+export const config = {
+  matcher: [
+    /*
+     * Match all paths except for:
+     * 1. /api routes
+     * 2. /_next (Next.js internals)
+     * 3. /_static (inside /public)
+     * 4. all root files inside /public (e.g. /favicon.ico)
+     */
+    '/((?!api/|_next/|_static/|_vercel|[\\w-]+\\.\\w+).*)',
+  ],
+};
 
 export default function middleware(req: NextRequest) {
-  const hostRaw = req.headers.get("host") || "";
-  const hostname = hostRaw.replace(/\.$/, ""); // normalize trailing dot
-  const parts = hostname.split(".");
-  const storeId = parts.length > 2 ? parts[0] : null;
   const url = req.nextUrl;
+  const hostname = req.headers.get('host');
 
-  // If diagnostic query param present, return JSON showing what we see
-  if (url.searchParams.has("_diag")) {
-    return NextResponse.json({
-      ok: true,
-      hostname,
-      parts,
-      storeId,
-      pathname: url.pathname,
-      env: process.env.NODE_ENV || null,
-    });
+  const PROD_DOMAIN = process.env.PROD_DOMAIN || 'shadaai.com';
+  const DEV_DOMAIN = 'localhost:9002';
+
+  let storeId: string | undefined;
+
+  if (hostname) {
+    if (process.env.NODE_ENV === 'production' && hostname.endsWith(PROD_DOMAIN)) {
+      const parts = hostname.split('.');
+      if (parts.length > 2 && parts[0] !== 'www') {
+        storeId = parts[0];
+      }
+    } else if (process.env.NODE_ENV !== 'production' && hostname.endsWith(DEV_DOMAIN)) {
+      const parts = hostname.split('.');
+      // For local dev, we use paths like /store/storeId, so subdomain logic isn't needed here.
+      // This part could be used for localhost subdomain testing if hosts file is configured.
+      if (parts.length > 1 && parts[0] !== 'www') {
+        // This is a simple approximation for local dev if you set up subdomains.
+        // e.g. store1.localhost:9002
+        storeId = parts[0];
+      }
+    }
   }
 
-  // Pass all other requests through without rewriting to prevent potential loops.
+  // If a storeId was found via subdomain, rewrite the path to the store page.
+  // This handles both root visits (e.g., store1.shadaai.com) and deep links (e.g., store1.shadaai.com/product/abc)
+  if (storeId) {
+    console.log(`Rewriting subdomain to /store/${storeId} for host ${hostname}`);
+    const newPath = `/store/${storeId}${url.pathname}`;
+    return NextResponse.rewrite(new URL(newPath, req.url));
+  }
+  
+  // No rewrite is needed for the main marketing site or other paths.
   return NextResponse.next();
 }
