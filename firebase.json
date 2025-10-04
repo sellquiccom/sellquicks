@@ -28,6 +28,7 @@
     }
   },
   "functions": {
-    "source": "."
+    "source": ".",
+    "runtime": "nodejs22"
   }
 }
