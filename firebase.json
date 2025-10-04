@@ -23,9 +23,5 @@
     "hosting": {
       "port": 9002
     }
-  },
-  "functions": {
-    "source": ".",
-    "runtime": "nodejs22"
   }
 }
