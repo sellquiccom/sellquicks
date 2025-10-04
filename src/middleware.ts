@@ -27,22 +27,25 @@ export default async function middleware(req: NextRequest) {
   if (hostname) {
     if (process.env.NODE_ENV === 'production' && hostname.endsWith(PROD_DOMAIN)) {
       const parts = hostname.split('.');
+      // A vendor subdomain will have 3 parts: [storeId, shadaai, com]
       if (parts.length > 2 && parts[0] !== 'www') {
         storeId = parts[0];
       }
-    } else if (process.env.NODE_ENV !== 'production' && hostname.endsWith(DEV_DOMAIN)) {
-      const parts = hostname.split('.');
-      if (parts.length > 1 && parts[0] !== 'www') {
-        storeId = parts[0];
-      }
+    } else if (process.env.NODE_ENV !== 'production' && hostname.startsWith('localhost:')) {
+      // In development, we can't use subdomains, so we check for /store/[storeId] in the path
+      // This part is handled by Next.js routing, so the middleware can focus on subdomains.
+      // We will add a special case for localhost development using a different pattern if needed.
     }
   }
 
-  // If a storeId was found via subdomain and we are on the root path, rewrite to the store page.
-  if (storeId && url.pathname === '/') {
-    return NextResponse.rewrite(new URL(`/store/${storeId}`, req.url));
+  // If a storeId was found via subdomain, rewrite to the store page.
+  if (storeId) {
+    // Rewrite any path on the subdomain to the corresponding store path.
+    // e.g., admin-store.shadaai.com/product/123 -> /store/admin-store/product/123
+    const newPath = `/store/${storeId}${url.pathname}`;
+    return NextResponse.rewrite(new URL(newPath, req.url));
   }
   
-  // No rewrite is needed for other paths or if no storeId is found.
+  // If no storeId, it's a request to the main marketing site (shadaai.com), so continue.
   return NextResponse.next();
 }
